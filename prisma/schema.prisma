@@ -8,44 +8,333 @@ datasource db {
 }
 
 enum ChatType {
-  USERCHAT
-  CHANNEL
-  GROUP
-  BOT
+  user_chat
+  group_chat
+  channel_chat
+  bot_chat
 }
 
 model User {
-  id        String    @id @default(uuid())
-  username  String
-  firstName String?
-  lastName  String?
-  avatar    String
-  Message   Message[]
+  id       String  @id @default(uuid())
+  username String? @unique
+  email    String
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  isDeleted Boolean @default(false) @map("is_deleted")
+  isBot     Boolean @default(false) @map("is_bot")
+
+  ownedGroupChats      GroupChat[]
+  ownedChannelChats    ChannelChat[]
+  userChat1            UserChat[]            @relation("UserChat1")
+  userChat2            UserChat[]            @relation("UserChat2")
+  sentMessages         MessageDetails[]
+  botDetails           BotDetails[]          @relation("BotOwner")
+  botParents           BotDetails[]          @relation("BotParent")
+  botSubscriptions     BotSubscription[]
+  channelSubscriptions ChannelSubscription[]
+  groupSubscriptions   GroupSubscription[]
+  Avatar               Avatar[]
+  Profile              Profile[]
+
+  @@index([username])
+  @@index([createdAt])
+  @@index([isBot])
   @@map("users")
 }
 
-model Chat {
-  id         String    @id @default(uuid())
-  type       ChatType  @default(USERCHAT)
-  publicUrl  String?
-  privateUrl String?
-  isPrivate  Boolean   @default(false)
-  Message    Message[]
+model Profile {
+  id        String  @id @default(uuid())
+  firstName String? @map("first_name")
+  lastName  String? @map("last_name")
+  bio       String? // User bio/description
+
+  publicUrl  String? @map("public_url") // Public profile URL
+  privateUrl String? @map("private_url") // Private referral URL
+
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
+  avatarId String
+  avatar   Avatar? @relation(fields: [avatarId], references: [id])
+
+  @@map("profile")
 }
 
-model Message {
+model Avatar {
+  id        String   @id @default(uuid())
+  file      String // image url
+  ownerId   String   @map("owner_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner   User      @relation(fields: [ownerId], references: [id])
+  Profile Profile[]
+
+  @@map("avatars")
+}
+
+model ChatFile {
+  id        String   @id @default(uuid())
+  file      String // file url
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  groupFiles    GroupFile[]
+  channelFiles  ChannelFile[]
+  userChatFiles UserChatFile[]
+
+  @@map("chat_files")
+}
+
+model GroupFile {
   id     String @id @default(uuid())
-  chatId String
+  fileId String @map("file_id")
+  chatId String @map("chat_id")
 
+  // Relations
+  file    ChatFile     @relation(fields: [fileId], references: [id])
+  message MessageGroup @relation(fields: [chatId], references: [id])
 
-  createdAt DateTime
-  updatedAt DateTime
+  @@map("group_files")
+}
 
-  isReading Boolean  @default(false)
+model ChannelFile {
+  id     String @id @default(uuid())
+  fileId String @map("file_id")
+  chatId String @map("chat_id")
 
-  chat   Chat   @relation(fields: [chatId], references: [id])
-  
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  // Relations
+  file    ChatFile       @relation(fields: [fileId], references: [id])
+  message MessageChannel @relation(fields: [chatId], references: [id])
+
+  @@map("channel_files")
+}
+
+model UserChatFile {
+  id     String @id @default(uuid())
+  fileId String @map("file_id")
+  chatId String @map("chat_id")
+
+  // Relations
+  file    ChatFile        @relation(fields: [fileId], references: [id])
+  message MessageUserChat @relation(fields: [chatId], references: [id])
+
+  @@map("user_chat_fiels")
+}
+
+model GroupChat {
+  id                 String   @id @default(uuid())
+  ownerId            String   @map("owner_id")
+  type               ChatType @default(group_chat)
+  title              String?
+  description        String? // Group description
+  publicUrl          String?  @map("public_url") // Public group URL
+  privateUrl         String?  @map("private_url") // Private group URL
+  subscriptionsCount BigInt   @default(0) @map("subscritions_count")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner         User                @relation(fields: [ownerId], references: [id])
+  messages      MessageGroup[]
+  subscriptions GroupSubscription[]
+
+  @@index([ownerId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([title])
+  @@map("group_chat")
+}
+
+model ChannelChat {
+  id                 String   @id @default(uuid())
+  ownerId            String   @map("owner_id")
+  subscriptionsCount BigInt   @default(0) @map("subscritions_count")
+  type               ChatType @default(channel_chat)
+  title              String?
+  description        String? // Channel description
+  publicUrl          String?  @map("public_url") // Public channel URL
+  privateUrl         String?  @map("private_url") // Private channel URL
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner         User                  @relation(fields: [ownerId], references: [id])
+  messages      MessageChannel[]
+  subscriptions ChannelSubscription[]
+
+  @@index([ownerId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([title])
+  @@map("channel_chat")
+}
+
+model UserChat {
+  id        String   @id @default(uuid())
+  user1Id   String   @map("user_1_id")
+  user2Id   String   @map("user_2_id")
+  type      ChatType @default(user_chat)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user1    User              @relation("UserChat1", fields: [user1Id], references: [id])
+  user2    User              @relation("UserChat2", fields: [user2Id], references: [id])
+  messages MessageUserChat[]
+
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([user1Id, user2Id])
+  @@index([type])
+  @@map("user_chat")
+}
+
+model MessageChannel {
+  id         String  @id @default(uuid())
+  chatId     String  @map("chat_id")
+  replayId   String? @map("replay_id")
+  mDetailsId String  @map("m_detailes_id")
+  isUpdated  Boolean @default(false) @map("is_updated")
+  isReading  Boolean @default(false) @map("is_reading")
+
+  // Relations
+  chat         ChannelChat      @relation(fields: [chatId], references: [id])
+  replyTo      MessageChannel?  @relation("MessageReply", fields: [replayId], references: [id])
+  replies      MessageChannel[] @relation("MessageReply")
+  details      MessageDetails   @relation(fields: [mDetailsId], references: [id])
+  channelFiles ChannelFile[]
+
+  @@index([chatId])
+  @@index([replayId])
+  @@index([mDetailsId])
+  @@index([chatId, mDetailsId])
+  @@map("messages_channel")
+}
+
+model MessageGroup {
+  id         String  @id @default(uuid())
+  chatId     String  @map("chat_id")
+  replayId   String? @map("replay_id")
+  mDetailsId String  @map("m_detailes_id")
+  isUpdated  Boolean @default(false) @map("is_updated")
+  isReading  Boolean @default(false) @map("is_reading")
+
+  // Relations
+  chat       GroupChat      @relation(fields: [chatId], references: [id])
+  replyTo    MessageGroup?  @relation("MessageReply", fields: [replayId], references: [id])
+  replies    MessageGroup[] @relation("MessageReply")
+  details    MessageDetails @relation(fields: [mDetailsId], references: [id])
+  groupFiles GroupFile[]
+
+  @@index([chatId])
+  @@index([replayId])
+  @@index([mDetailsId])
+  @@index([chatId, mDetailsId])
+  @@map("messages_group")
+}
+
+model MessageUserChat {
+  id         String  @id @default(uuid())
+  chatId     String  @map("chat_id")
+  replayId   String? @map("replay_id")
+  mDetailsId String  @map("m_detailes_id")
+  isUpdated  Boolean @default(false) @map("is_updated")
+  isReading  Boolean @default(false) @map("is_reading")
+
+  // Relations
+  chat          UserChat          @relation(fields: [chatId], references: [id])
+  replyTo       MessageUserChat?  @relation("MessageReply", fields: [replayId], references: [id])
+  replies       MessageUserChat[] @relation("MessageReply")
+  details       MessageDetails    @relation(fields: [mDetailsId], references: [id])
+  userChatFiles UserChatFile[]
+
+  @@index([chatId])
+  @@index([replayId])
+  @@index([mDetailsId])
+  @@index([chatId, mDetailsId])
+  @@map("messages_user_chat")
+}
+
+model MessageDetails {
+  id        String   @id @default(uuid())
+  senderId  String   @map("sender_id")
+  text      String?
+  images    Json?
+  videos    Json?
+  docs      Json?
+  files     Json?
+  stickers  Json?    @map("stikers")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  sender           User              @relation(fields: [senderId], references: [id])
+  channelMessages  MessageChannel[]
+  groupMessages    MessageGroup[]
+  userChatMessages MessageUserChat[]
+
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([senderId, createdAt])
+  @@map("message_detailes")
+}
+
+model BotDetails {
+  id       String @id @default(uuid())
+  parentId String @map("parrent_id")
+  ownerId  String @map("owner_id")
+
+  // Relations
+  parent User @relation("BotParent", fields: [parentId], references: [id])
+  owner  User @relation("BotOwner", fields: [ownerId], references: [id])
+
+  @@map("bot_detailes")
+}
+
+model ChannelSubscription {
+  id           String  @id @default(uuid())
+  chatId       String  @map("chat_id")
+  subscriberId String  @map("subscriber_id")
+  isWrite      Boolean  @default(false)
+
+  // Relations
+  chat       ChannelChat @relation(fields: [chatId], references: [id])
+  subscriber User        @relation(fields: [subscriberId], references: [id])
+
+  @@index([chatId])
+  @@index([subscriberId])
+  @@index([chatId, subscriberId])
+  @@map("channel_subscribtions")
+}
+
+model GroupSubscription {
+  id           String @id @default(uuid())
+  chatId       String @map("chat_id")
+  subscriberId String @map("subscriber_id")
+
+  // Relations
+  chat       GroupChat @relation(fields: [chatId], references: [id])
+  subscriber User      @relation(fields: [subscriberId], references: [id])
+
+  @@index([chatId])
+  @@index([subscriberId])
+  @@index([chatId, subscriberId])
+  @@map("group_subscribtions")
+}
+
+model BotSubscription {
+  id           String @id @default(uuid())
+  botId        String @map("bot_id")
+  subscriberId String @map("subscriber_id")
+
+  // Relations
+  subscriber User   @relation(fields: [subscriberId], references: [id])
+  userId     String
+
+  @@index([botId])
+  @@index([subscriberId])
+  @@index([botId, subscriberId])
+  @@map("bot_subscribtions")
 }
