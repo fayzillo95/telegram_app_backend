@@ -1,8 +1,10 @@
 import { ConflictException, HttpException, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "../../core/prisma/prisma.service";
 import { ModelsEnumInPrisma } from "./global.types";
+import { PrismaService } from "src/core/prisma/prisma.service";
+
 
 export async function checAlreadykExistsResurs(
+
   prisma: PrismaService,
   modelName: ModelsEnumInPrisma,
   field: string,

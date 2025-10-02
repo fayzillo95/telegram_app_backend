@@ -37,7 +37,46 @@ export class MessagesService {
         chatId: dto.chatId,
         mDetailsId: details.id,
       },
-      include: { details: true },
+      include: { details: {
+        select : {
+          images : true,
+          docs : true,
+          files : true,
+          id : true ,
+          text : true,
+          stickers  : true,
+          videos  : true,
+          sender  : {
+            select : {
+              Avatar : {
+                select : {
+                  file : true,
+                }
+              },
+              Profile : {
+                select : {
+                  id : true,
+                  avatar : {
+                      select  :{
+                        file : true,
+                        updatedAt : true,
+                      },
+                  },
+                  firstName : true,
+                  lastName : true,
+                  bio  : true,
+                  userId : true,
+                  privateUrl : true,
+                  publicUrl : true,
+                }
+              },
+              email : true,
+              username  : true
+            }
+          },
+          senderId : true
+        }
+      } ,replies : true,chat:true,_count : true,userChatFiles  : true},
     });
   }
 
