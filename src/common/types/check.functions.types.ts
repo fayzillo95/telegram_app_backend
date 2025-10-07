@@ -4,14 +4,12 @@ import { PrismaService } from "src/core/prisma/prisma.service";
 
 
 export async function checAlreadykExistsResurs(
-
   prisma: PrismaService,
   modelName: ModelsEnumInPrisma,
   field: string,
   value: any
 ) {
   if (prisma[modelName] && typeof prisma[modelName].findFirst === 'function') {
-    // @ts-ignore
     const result = await prisma[modelName].findFirst({
       where: {
         [field]: value,

@@ -43,7 +43,7 @@ export class JwtAuthGuard implements CanActivate {
     console.log("JwtAuthGuard line 42 point", point, token, "salom")
 
     if (!token) {
-      console.log("JwtAuthGuard line 44 no token in header, checking cookies")
+      console.log("JwtAuthGuard line 44 no token in header, checking cookies",req.cookies)
       if (point === 'reset-token') {
         token = req.cookies?.refreshToken;
       } else if (point === 'verification') {

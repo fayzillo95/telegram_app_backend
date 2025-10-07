@@ -1,5 +1,6 @@
 import { 
-  Controller, Get, Post, Body, Patch, Param, Delete 
+  Controller, Get, Post, Body, Patch, Param, Delete, 
+  UseInterceptors
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { 
@@ -10,8 +11,12 @@ import {
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { UserData } from 'src/global/decorators/auth.decorators';
 import { JwtPayload } from 'src/common/config/jwt.secrets';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { fileStorages } from 'src/common/types/upload_types';
+import { MessagesInterceptor } from './entities/message.entity';
 
 @Controller('messages')
+@UseInterceptors(MessagesInterceptor)
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
@@ -21,12 +26,20 @@ export class MessagesController {
     @Body() dto: CreateUserMessageDto,
     @UserData() user: JwtPayload,
   ) {
+    console.log(dto)
     return this.messagesService.createUserMessage(dto, user.id);
   }
 
-  @Get('user/:chatId')
+  @Get('user/get-all/:chatId')
   findUserMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findUserMessages(chatId);
+  }
+
+  @Get("user/get-all")
+  find(
+    @UserData() user : JwtPayload
+  ){
+
   }
 
   // === GROUP CHAT ===
@@ -51,17 +64,4 @@ export class MessagesController {
     return this.messagesService.findChannelMessages(chatId);
   }
 
-  // === UNIVERSAL CRUD (optional, agar kerak bo‘lsa) ===
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateMessageDto: UpdateMessageDto,
-  ) {
-    return this.messagesService.update(id, updateMessageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.messagesService.remove(id);
-  }
 }

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <header class="topbar">
+        <div class="title">Регистрация</div>
+    </header>
+
+    <div class="van-toast van-toast--middle van-toast--loading" style="z-index: 2005; display: none;">
+        <div class="van-loading van-loading--circular van-toast__loading"><span
+                class="van-loading__spinner van-loading__spinner--circular"><svg viewBox="25 25 50 50"
+                    class="van-loading__circular">
+                    <circle cx="50" cy="50" r="20" fill="none"></circle>
+                </svg></span></div>
+    </div>
+    <link rel="stylesheet" href="https://h5-mcnldy.com/public/msg/notifIt.css">
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://h5-mcnldy.com/public/msg/notifIt.js"></script>
+    <script>
+        function notice(message, type = null, url = null) {
+            var delay = 500000;
+            notif({
+                type: type ? type : 'success',
+                msg: message ? message : 'Empty Message',
+                position: "center",
+                opacity: 0.8,
+                time: delay
+            });
+
+            if (url) {
+                setTimeout(function () {
+                    document.querySelector('.van-toast--loading').style.display = 'block';
+                    window.location.href = url
+                }, delay)
+            }
+        }
+    </script>
+
+    <script>
+        function goLink(link) {
+            document.querySelector('.van-toast--loading').style.display = 'block';
+            window.location.href = link;
+        }
+
+        function loading() {
+            document.querySelector('.van-toast--loading').style.display = 'block';
+        }
+    </script>
+
+    <script>
+
+
+
+    </script>
+
+    <main class="wrap">
+        <div class="section"><span class="ribbon">Данные аккаунта</span></div>
+
+        <form id="registerForm" action="https://h5-mcnldy.com/register" method="post" novalidate="">
+            <input type="hidden" name="_token" value="DsPOQYAXaOezdyroN2Paul9o8ylkd7RGUXkq2amk">
+            <!-- Телефон -->
+            <div class="row" id="row-phone">
+                <span class="licon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="3"></rect>
+                        <line x1="12" y1="18" x2="12" y2="18"></line>
+                    </svg>
+                </span>
+
+                <div class="prefix cc-wrap">
+                    <!-- Скрытый select для сервера -->
+                    <select id="ccSelect" name="country_code" class="cc" aria-label="Код страны">
+                        <option value="UZ" selected="">Узбекистан +998</option>
+                        <option value="KZ">Казахстан +7</option>
+                        <option value="RU">Россия +7</option>
+                        <option value="KG">Киргизия +996</option>
+                        <option value="TJ">Таджикистан +992</option>
+                        <option value="TM">Туркменистан +993</option>
+                        <option value="UA">Украина +380</option>
+                        <option value="BY">Беларусь +375</option>
+                        <option value="AZ">Азербайджан +994</option>
+                        <option value="AM">Армения +374</option>
+                        <option value="GE">Грузия +995</option>
+                        <option value="TR">Турция +90</option>
+                        <option value="AE">ОАЭ +971</option>
+                        <option value="SA">Саудовская Аравия +966</option>
+                        <option value="QA">Катар +974</option>
+                        <option value="IR">Иран +98</option>
+                        <option value="IN">Индия +91</option>
+                        <option value="PK">Пакистан +92</option>
+                        <option value="CN">Китай +86</option>
+                        <option value="US">США +1</option>
+                        <option value="GB">Великобритания +44</option>
+                        <option value="DE">Германия +49</option>
+                        <option value="FR">Франция +33</option>
+                        <option value="ES">Испания +34</option>
+                        <option value="IT">Италия +39</option>
+                    </select>
+
+                    <!-- CHIP: только +код (без флага/фона/тени) -->
+                    <span class="cc-chip" id="ccChip"><span class="cc-text" id="ccText">+998</span></span>
+                    <svg class="cc-arrow" id="ccArrow" viewBox="0 0 24 24" fill="none" stroke="#9aa3ad" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+
+                <input class="in" type="tel" name="phone" id="phone" value="" placeholder="90 123 45 67"
+                    inputmode="numeric" autocomplete="tel" required="" pattern="^(\d{9}|\d{2}\s\d{3}\s\d{2}\s\d{2})$">
+                <input type="hidden" id="country_code_real" name="country_code_real" value="+998">
+            </div>
+            <div class="hint " id="hint-phone">
+                Введите номер телефона в корректном формате. </div>
+
+            <!-- Пароль -->
+            <div class="row" id="row-pass">
+                <span class="licon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </span>
+                <input class="in" id="pwd" type="password" name="password" placeholder="Пароль"
+                    autocomplete="new-password" required="">
+                <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" onclick="toggleEye('pwd', this)"
+                    aria-label="Показать/скрыть пароль">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+            <div class="hint " id="hint-pass"> Укажите пароль. </div>
+
+            <!-- Подтверждение пароля -->
+            <div class="row" id="row-confirm">
+                <span class="licon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </span>
+                <input class="in" id="pwd2" type="password" name="password_confirmation" placeholder="Повторите пароль"
+                    autocomplete="new-password" required="">
+                <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" onclick="toggleEye('pwd2', this)"
+                    aria-label="Показать/скрыть пароль">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+            <div class="hint" id="hint-confirm">Пароли не совпадают.</div>
+
+            <div class="section"><span class="ribbon">Данные пользователя</span></div>
+
+            <!-- ref_by -->
+            <div class="row">
+                <span class="licon heart" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
+                        stroke-width="0">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z">
+                        </path>
+                    </svg>
+                </span>
+                <input class="in" type="text" name="ref_by" id="ref_by" value="484xlafaw358"
+                    placeholder="Код приглашения (если есть)">
+            </div>
+
+            <div style="margin-top:18px"><button class="btn" type="submit" id="registerBtn">Зарегистрироваться</button>
+            </div>
+            <p class="foot">Уже есть аккаунт? <a href="https://h5-mcnldy.com/login">Войти</a></p>
+        </form>
+    </main>
+
+    <!-- Bottom Sheet + Scrim -->
+    <div id="sheetScrim" class="sheet-scrim" aria-hidden="true"></div>
+    <div id="ccSheet" class="sheet" role="dialog" aria-modal="true" aria-label="Выбор кода страны">
+        <div class="sheet-head">
+            <div class="sheet-grabber" id="sheetGrabber" title="Потяните вверх/вниз"></div>
+            <div class="cc-search-wrap">
+                <input id="ccSearch" class="cc-search" type="text" placeholder="Поиск: страна или код (+998, UZ, Узб)">
+            </div>
+        </div>
+        <div id="ccList" class="cc-list" role="listbox"></div>
+        <div id="ccEmpty" class="cc-empty" style="display:none">Ничего не найдено</div>
+    </div>
+
+    <script>
+        // ===== helpers =====
+        const onlyDigits = s => (s || '').replace(/\D/g, '');
+        const formatBy = (s, segs) => {
+            s = onlyDigits(s).slice(0, segs.reduce((a, b) => a + b, 0));
+            let out = '', i = 0;
+            for (const len of segs) {
+                const part = s.slice(i, i + len);
+                if (!part) break;
+                out += (out ? ' ' : '') + part;
+                i += len;
+            }
+            return out;
+        };
+
+        // ——— 24 страны ———
+        const ALL_COUNTRIES = [
+            { key: 'UZ', iso: 'UZ', name: 'Узбекистан', dial: '+998', digits: 9, segs: [2, 3, 2, 2], ph: '90 123 45 67' },
+            { key: 'KZ', iso: 'KZ', name: 'Казахстан', dial: '+7', digits: 10, segs: [3, 3, 2, 2], ph: '7xx xxx xx xx' },
+            { key: 'RU', iso: 'RU', name: 'Россия', dial: '+7', digits: 10, segs: [3, 3, 2, 2], ph: '9xx xxx xx xx' },
+            { key: 'KG', iso: 'KG', name: 'Киргизия', dial: '+996', digits: 9, segs: [3, 3, 3], ph: '700 123 456' },
+            { key: 'TJ', iso: 'TJ', name: 'Таджикистан', dial: '+992', digits: 9, segs: [3, 3, 3], ph: '935 123 456' },
+            { key: 'TM', iso: 'TM', name: 'Туркменистан', dial: '+993', digits: 8, segs: [2, 3, 3], ph: '61 234 567' },
+            { key: 'UA', iso: 'UA', name: 'Украина', dial: '+380', digits: 9, segs: [2, 3, 2, 2], ph: '67 123 45 67' },
+            { key: 'BY', iso: 'BY', name: 'Беларусь', dial: '+375', digits: 9, segs: [2, 3, 2, 2], ph: '29 123 45 67' },
+            { key: 'AZ', iso: 'AZ', name: 'Азербайджан', dial: '+994', digits: 9, segs: [2, 3, 2, 2], ph: '50 123 45 67' },
+            { key: 'AM', iso: 'AM', name: 'Армения', dial: '+374', digits: 8, segs: [2, 3, 3], ph: '91 234 567' },
+            { key: 'GE', iso: 'GE', name: 'Грузия', dial: '+995', digits: 9, segs: [3, 3, 3], ph: '555 123 456' },
+            { key: 'TR', iso: 'TR', name: 'Турция', dial: '+90', digits: 10, segs: [3, 3, 4], ph: '501 234 5678' },
+            { key: 'AE', iso: 'AE', name: 'ОАЭ', dial: '+971', digits: 9, segs: [3, 3, 3], ph: '050 123 456' },
+            { key: 'SA', iso: 'SA', name: 'Сауд. Аравия', dial: '+966', digits: 9, segs: [3, 3, 3], ph: '050 123 456' },
+            { key: 'QA', iso: 'QA', name: 'Катар', dial: '+974', digits: 8, segs: [4, 4], ph: '5012 3456' },
+            { key: 'IR', iso: 'IR', name: 'Иран', dial: '+98', digits: 10, segs: [3, 3, 4], ph: '901 234 5678' },
+            { key: 'IN', iso: 'IN', name: 'Индия', dial: '+91', digits: 10, segs: [3, 3, 4], ph: '901 234 5678' },
+            { key: 'PK', iso: 'PK', name: 'Пакистан', dial: '+92', digits: 10, segs: [3, 3, 4], ph: '301 234 5678' },
+            { key: 'CN', iso: 'CN', name: 'Китай', dial: '+86', digits: 11, segs: [3, 4, 4], ph: '131 2345 6789' },
+            { key: 'US', iso: 'US', name: 'США', dial: '+1', digits: 10, segs: [3, 3, 4], ph: '201 555 0123' },
+            { key: 'GB', iso: 'GB', name: 'Великобритания', dial: '+44', digits: 10, segs: [3, 3, 4], ph: '740 123 4567' },
+            { key: 'DE', iso: 'DE', name: 'Германия', dial: '+49', digits: 10, segs: [3, 3, 4], ph: '151 234 5678' },
+            { key: 'FR', iso: 'FR', name: 'Франция', dial: '+33', digits: 9, segs: [1, 2, 2, 2, 2], ph: '6 12 34 56 78' },
+            { key: 'ES', iso: 'ES', name: 'Испания', dial: '+34', digits: 9, segs: [3, 3, 3], ph: '612 345 678' },
+            { key: 'IT', iso: 'IT', name: 'Италия', dial: '+39', digits: 10, segs: [3, 3, 4], ph: '312 345 6789' },
+        ];
+        const COUNTRIES = Object.fromEntries(ALL_COUNTRIES.map(c => [c.key, c]));
+
+        // ==== элементы ====
+        const form = document.getElementById('registerForm');
+        const ccSel = document.getElementById('ccSelect');
+        const ccChip = document.getElementById('ccChip');
+        const ccTxt = document.getElementById('ccText');
+        const ccReal = document.getElementById('country_code_real');
+        const ccArrow = document.getElementById('ccArrow');
+
+        const sheet = document.getElementById('ccSheet');
+        const scrim = document.getElementById('sheetScrim');
+        const ccList = document.getElementById('ccList');
+        const ccEmpty = document.getElementById('ccEmpty');
+        const ccSearch = document.getElementById('ccSearch'); /* EКЗАКТНО ОДНО объявление */
+        const grabber = document.getElementById('sheetGrabber');
+
+        const phone = document.getElementById('phone');
+        const hPhone = document.getElementById('hint-phone');
+        const pwd = document.getElementById('pwd');
+        const pwd2 = document.getElementById('pwd2');
+        const hPass = document.getElementById('hint-pass');
+        const hConf = document.getElementById('hint-confirm');
+        const btn = document.getElementById('registerBtn');
+
+        // ——— inline SVG флаг (упрощённый, без эмблем/стикеров) ———
+        function flagSVG(iso) {
+            const defs = {
+                UZ: ['#1eb53a', '#fff', '#1eb53a'],
+                KZ: ['#00afca', '#00afca', '#00afca'],
+                RU: ['#fff', '#0039a6', '#d52b1e'],
+                KG: ['#e8112d', '#e8112d', '#e8112d'],
+                TJ: ['#ff0000', '#fff', '#006600'],
+                TM: ['#296e3a', '#296e3a', '#296e3a'],
+                UA: ['#0057b7', '#ffd700'],
+                BY: ['#cf142b', '#009b3a', '#009b3a'],
+                AZ: ['#00b5e2', '#ef3340', '#00a651'],
+                AM: ['#d90012', '#0033a0', '#f2a800'],
+                GE: ['#fff', '#fff', '#fff'],
+                TR: ['#e30a17', '#e30a17', '#e30a17'],
+                AE: ['#00732f', '#fff', '#000000'],
+                SA: ['#006c35', '#006c35', '#006c35'],
+                QA: ['#8a1538', '#fff', '#8a1538'],
+                IR: ['#239f40', '#fff', '#da0000'],
+                IN: ['#ff9933', '#fff', '#128807'],
+                PK: ['#115740', '#115740', '#115740'],
+                CN: ['#de2910', '#de2910', '#de2910'],
+                US: ['#b22234', '#fff', '#b22234'],
+                GB: ['#00247d', '#fff', '#cf142b'],
+                DE: ['#000', '#dd0000', '#ffce00'],
+                FR: ['#0055a4', '#fff', '#ef4135'],
+                ES: ['#aa151b', '#f1bf00', '#aa151b'],
+                IT: ['#009246', '#fff', '#ce2b37'],
+            };
+            const c = defs[iso] || ['#ddd', '#bbb', '#ddd'];
+            const stripes = c.length === 2
+                ? `<rect width="100%" height="50%" fill="${c[0]}"/><rect y="50%" width="100%" height="50%" fill="${c[1]}"/>`
+                : `<rect width="100%" height="33.333%" fill="${c[0]}"/><rect y="33.333%" width="100%" height="33.333%" fill="${c[1]}"/><rect y="66.666%" width="100%" height="33.333%" fill="${c[2]}"/>`;
+            return `<svg viewBox="0 0 22 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${stripes}</svg>`;
+        }
+
+        // ——— маска телефона ———
+        function updateMask(c) {
+            phone.placeholder = c.ph || '';
+            const spaced = (c.segs || []).map(n => `\\d{${n}}`).join('\\s');
+            const pat = c.segs?.length ? `^(\\d{${c.digits}}|${spaced})$` : `^\\d{${c.digits}}$`;
+            phone.setAttribute('pattern', pat);
+            phone.value = formatBy(phone.value, c.segs || []);
+        }
+
+        // ——— выбор страны: сверху остаётся ТОЛЬКО +код ———
+        function selectCountry(key) {
+            const c = COUNTRIES[key] || COUNTRIES.UZ;
+            ccSel.value = key;
+            ccTxt.textContent = c.dial;   // только код
+            ccReal.value = c.dial;
+            updateMask(c);
+            hPhone.classList.toggle('show', phone.value && onlyDigits(phone.value).length !== c.digits);
+            closeSheet();
+        }
+
+        // ——— рендер списка ———
+        function renderList(filter = '') {
+            ccList.innerHTML = '';
+            let items = ALL_COUNTRIES;
+            if (filter) {
+                const f = filter.trim().toLowerCase();
+                items = ALL_COUNTRIES.filter(c =>
+                    c.name.toLowerCase().includes(f) ||
+                    c.iso.toLowerCase().includes(f) ||
+                    c.dial.replace('+', '').includes(f.replace('+', '')) ||
+                    ('+' + c.dial.replace('+', '')).includes(f)
+                );
+            }
+            ccEmpty.style.display = items.length ? 'none' : 'block';
+            items.forEach(c => {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'cc-item'; b.setAttribute('role', 'option');
+                b.innerHTML = `
+        <span class="cc-flag">${flagSVG(c.iso)}</span>
+        <span class="cc-name">${c.name}</span>
+        <span class="cc-dial">${c.dial} <span style="color:#9ca3af;font-style:italic;margin-left:6px">${c.iso}</span></span>
+      `;
+                b.addEventListener('click', () => selectCountry(c.key));
+                ccList.appendChild(b);
+            });
+        }
+
+        // ——— открыть/закрыть шит ———
+        function openSheet() {
+            renderList();
+            scrim.classList.add('show');
+            sheet.classList.add('open');
+            document.body.classList.add('lock-scroll');
+            setTimeout(() => ccSearch.focus(), 60);
+        }
+        function closeSheet() {
+            scrim.classList.remove('show');
+            sheet.classList.remove('open');
+            document.body.classList.remove('lock-scroll');
+        }
+
+        // клики по стрелке и чипу
+        scrim.addEventListener('click', closeSheet);
+        ccArrow.addEventListener('click', (e) => { e.stopPropagation(); openSheet(); });
+        ccChip.addEventListener('click', (e) => { e.stopPropagation(); openSheet(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+        // поиск
+        ccSearch.addEventListener('input', () => renderList(ccSearch.value));
+
+        // ——— drag высоты шита ———
+        (function enableDrag() {
+            let startY = 0, startH = 0, dragging = false;
+            const minH = 30, maxH = 85;
+            function setH(vh) {
+                const clamped = Math.max(minH, Math.min(maxH, vh));
+                document.documentElement.style.setProperty('--sheetH', clamped + 'vh');
+            }
+            function onStart(y) {
+                dragging = true; startY = y;
+                const cur = getComputedStyle(document.documentElement).getPropertyValue('--sheetH').trim();
+                startH = parseFloat(cur.replace('vh', '')) || 42;
+            }
+            function onMove(y) {
+                if (!dragging) return;
+                const dy = startY - y;
+                const vh = startH + (dy / window.innerHeight * 100);
+                setH(vh);
+            }
+            function onEnd() {
+                if (!dragging) return; dragging = false;
+                const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheetH'));
+                const snap = [35, 60, 80].reduce((a, b) => Math.abs(b - cur) < Math.abs(a - cur) ? b : a, 60);
+                setH(snap);
+            }
+            grabber.addEventListener('pointerdown', e => { grabber.setPointerCapture(e.pointerId); onStart(e.clientY); });
+            grabber.addEventListener('pointermove', e => onMove(e.clientY));
+            grabber.addEventListener('pointerup', onEnd);
+            grabber.addEventListener('touchstart', e => onStart(e.touches[0].clientY), { passive: true });
+            grabber.addEventListener('touchmove', e => onMove(e.touches[0].clientY), { passive: true });
+            grabber.addEventListener('touchend', onEnd);
+        })();
+
+        // ——— init по умолчанию ———
+        (function initDefault() {
+            const defKey = ccSel.value || 'UZ';
+            const c = COUNTRIES[defKey];
+            ccTxt.textContent = c.dial;     // только +код в чипе
+            ccReal.value = c.dial;
+            updateMask(c);
+        })();
+
+        // маска ввода
+        phone.addEventListener('input', () => {
+            const c = COUNTRIES[ccSel.value] || COUNTRIES.UZ;
+            phone.value = formatBy(phone.value, c.segs || []);
+            hPhone.classList.toggle('show', phone.value && onlyDigits(phone.value).length !== c.digits);
+        });
+        phone.addEventListener('blur', () => {
+            const c = COUNTRIES[ccSel.value] || COUNTRIES.UZ;
+            hPhone.classList.toggle('show', phone.value && onlyDigits(phone.value).length !== c.digits);
+        });
+
+        // глазик
+        window.toggleEye = function (id, el) {
+            const t = document.getElementById(id);
+            const show = t.type === 'password';
+            t.type = show ? 'text' : 'password';
+            el.style.opacity = show ? .95 : .65;
+        };
+
+        // URL -> ref_by
+        (function () {
+            try {
+                const p = new URLSearchParams(location.search);
+                const ref = p.get('ref') || p.get('ref_by') || p.get('invite');
+                const el = document.getElementById('ref_by');
+                if (ref && el && !el.value) {
+                    el.value = ref; localStorage.setItem('ref_by_saved', ref);
+                } else if (el && !el.value) {
+                    const saved = localStorage.getItem('ref_by_saved'); if (saved) el.value = saved;
+                }
+            } catch (e) { }
+        })();
+
+        // Отправка
+        const formEl = document.getElementById('registerForm');
+        formEl.addEventListener('submit', (e) => {
+            const c = COUNTRIES[ccSel.value] || COUNTRIES.UZ;
+            const okPhone = onlyDigits(phone.value).length === c.digits;
+            const okPass = !!pwd.value;
+            const okMatch = pwd.value === pwd2.value && !!pwd2.value;
+
+            hPhone.classList.toggle('show', !okPhone);
+            hPass.classList.toggle('show', !okPass);
+            hConf.classList.toggle('show', !okMatch);
+
+            if (!okPhone || !okPass || !okMatch) { e.preventDefault(); return; }
+
+            phone.value = onlyDigits(phone.value);
+            btn.setAttribute('disabled', 'disabled');
+            btn.textContent = 'Отправка...';
+
+            if (window.RegisterHooks && typeof window.RegisterHooks.submit === 'function') {
+                e.preventDefault();
+                const payload = {
+                    countryCode: ccReal.value.replace('+', ''),
+                    phone: phone.value,
+                    password: pwd.value,
+                    password_confirmation: pwd2.value,
+                    ref_by: (formEl.ref_by?.value || '')
+                };
+                Promise.resolve(window.RegisterHooks.submit(payload))
+                    .then(res => window.RegisterHooks.onSuccess && window.RegisterHooks.onSuccess(res || payload))
+                    .catch(err => {
+                        btn.removeAttribute('disabled');
+                        btn.textContent = 'Зарегистрироваться';
+                        window.RegisterHooks.onError ? window.RegisterHooks.onError(err) : alert('Ошибка: ' + (err?.message || err));
+                    });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

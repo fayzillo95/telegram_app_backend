@@ -29,12 +29,11 @@ export const initGlobalApp = (app: INestApplication) => {
         customSiteTitle: 'My API Docs',
     })
     app.enableCors({
-        origin: "http://localhost:3000",
-        credentials: true
+        origin: "*",
     });
     app.use(new DeviceMiddleware().use)
     app.useGlobalFilters(new MulterValidationExceptionFilter())
     app.enableCors()
-    console.log("Init functio complieted\n http://localhost:1597/api-docs")
+    console.log("Init functio complieted\n http://192.168.34.176:15976/api-docs")
 
 }

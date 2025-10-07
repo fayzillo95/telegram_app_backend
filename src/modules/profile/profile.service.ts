@@ -1,11 +1,15 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { ImageGenerator, urlGenerator } from 'src/common/types/generator.types';
-import { Profile } from '@prisma/client';
 import { unlinkFile } from 'src/common/types/file.cotroller.typpes';
+import { profileServiceReturnData } from './entities/profile.entity';
 
 @Injectable()
 export class ProfileService {
@@ -13,177 +17,141 @@ export class ProfileService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly imageGenerator: ImageGenerator,
-  ) { }
+  ) {}
 
   // ✅ CREATE
-  async create(data: CreateProfileDto, userId: string, file?: Express.Multer.File) {
+  async create(dto: CreateProfileDto, userId: string, file?: Express.Multer.File) {
     const oldProfile = await this.prisma.profile.findFirst({ where: { userId } });
-    if (oldProfile) {
-      throw new ConflictException('Profile already exists');
-    }
+    if (oldProfile) throw new ConflictException('Profile already exists');
 
-    // Default avatar generatsiya qilish
-    let img = this.imageGenerator.generateAvatar(
-      data.firstName && data.lastName
-        ? data.firstName[0] + data.lastName[0]
-        : data.firstName
-          ? data.firstName.slice(0, 2)
-          : data.lastName
-            ? data.lastName.slice(0, 2)
-            : 'US',
-      this.config,
-    );
-
-    // Agar fayl kelsa - fayl URL’ni yozib qo‘yish
-    if (file && file.filename) {
+    // Avatar tayyorlash
+    let img = '';
+    if (file?.filename) {
       img = urlGenerator(this.config, file.filename);
+    } else {
+      img = this.imageGenerator.generateAvatar(
+        dto.firstName && dto.lastName
+          ? dto.firstName[0] + dto.lastName[0]
+          : dto.firstName?.slice(0, 2) || dto.lastName?.slice(0, 2) || 'US',
+        this.config,
+      );
     }
 
-    const avatar = await this.prisma.avatar.create({
-      data: {
-        file: img,
-        ownerId: userId,
-      },
-    });
-
-    // Username update qilish
-    if (data.username) {
+    // Username update
+    if (dto.username) {
       await this.prisma.user.update({
         where: { id: userId },
-        data: { username: data.username },
+        data: { username: dto.username },
       });
     }
 
     // Profile yaratish
-    const dataProfile: Partial<Profile> = {};
-    Object.keys(data).forEach((key) => {
-      if (key === 'username') return;
-      dataProfile[key] = data[key];
-    });
+    const { username, ...rest } = dto;
 
     const newProfile = await this.prisma.profile.create({
       data: {
-        avatarId: avatar.id,
-        ...dataProfile,
-        userId: userId,
+        ...rest,
+        avatar: img,
+        userId,
+        privateUrl: `users/private/${userId}`,
+        publicUrl: `userchats/create/${userId}`,
       },
-      include: {
-        avatar: true,
-        user: true,
-      },
+      include: { user: true },
     });
 
     return {
-      message: 'This action adds a new profile',
-      profile: newProfile,
+      message: 'Profile created successfully',
+      user: profileServiceReturnData(newProfile.user, newProfile),
     };
   }
 
-  // ✅ READ ALL
+  // ✅ FIND ALL
   async findAll() {
-    const profiles = await this.prisma.profile.findMany({
-      include: {
-        avatar: true,
-        user: true,
-      },
-    });
+    const profiles = await this.prisma.profile.findMany({ include: { user: true } });
+
+    const users = profiles.map((p) => profileServiceReturnData(p.user, p));
 
     return {
-      count: profiles.length,
-      profiles,
+      message: 'All profiles fetched successfully',
+      count: users.length,
+      users,
     };
   }
 
-  // ✅ READ ONE
+  // ✅ FIND ONE
   async findOne(id: string) {
     const profile = await this.prisma.profile.findUnique({
       where: { id },
-      include: {
-        avatar: true,
-        user: true,
-      },
+      include: { user: true },
     });
 
-    if (!profile) {
-      throw new NotFoundException('Profile not found');
-    }
+    if (!profile) throw new NotFoundException('Profile not found');
 
-    return profile;
+    return {
+      message: 'Profile fetched successfully',
+      user: profileServiceReturnData(profile.user, profile),
+    };
   }
 
   // ✅ UPDATE
-  async update(id: string, updateProfileDto: UpdateProfileDto, file?: Express.Multer.File) {
-    const profile = await this.prisma.profile.findUnique({ where: { id } });
-    if (!profile) {
-      throw new NotFoundException('Profile not found');
+  async update(id: string, dto: UpdateProfileDto, file?: Express.Multer.File) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    let img = profile.avatar;
+
+    if (file?.filename) {
+      img = urlGenerator(this.config, file.filename);
+      if (profile.avatar) {
+        const oldFile = profile.avatar.split('/').at(-1);
+        if (oldFile) unlinkFile(oldFile);
+      }
     }
 
-    let imgUrl: string | null = null;
-
-    if (file && file.filename) {
-      imgUrl = urlGenerator(this.config, file.filename);
-      // Avatarni yangilash
-      await this.prisma.avatar.update({
-        where: { id: profile.avatarId },
-        data: { file: imgUrl },
-      });
-    }
-
-    // Agar username bo‘lsa - user table ni update qilish
-    if (updateProfileDto.username) {
+    // Username update
+    if (dto.username) {
       await this.prisma.user.update({
         where: { id: profile.userId },
-        data: { username: updateProfileDto.username },
+        data: { username: dto.username },
       });
     }
 
-    const updatedProfile = await this.prisma.profile.update({
+    const updated = await this.prisma.profile.update({
       where: { id },
       data: {
-        firstName: updateProfileDto.firstName,
-        lastName: updateProfileDto.lastName,
-        bio: updateProfileDto.bio,
+        avatar: img,
+        firstName: dto.firstName ?? profile.firstName,
+        lastName: dto.lastName ?? profile.lastName,
+        bio: dto.bio ?? profile.bio,
       },
-      include: {
-        avatar: true,
-        user: true,
-      },
+      include: { user: true },
     });
 
     return {
       message: 'Profile successfully updated',
-      profile: updatedProfile,
+      user: profileServiceReturnData(updated.user, updated),
     };
   }
 
   // ✅ DELETE
   async remove(id: string) {
-    const profile = await this.prisma.profile.findUnique({ where: { id } });
-    if (!profile) {
-      throw new NotFoundException('Profile not found');
-    }
-
-    // Avatarlardagi fayl nomlarini olish
-    const avatars = await this.prisma.avatar.findMany({
-      where: { ownerId: profile.userId },
-      select: { file: true },
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+      include: { user: true },
     });
+    if (!profile) throw new NotFoundException('Profile not found');
 
+    const fileName = profile.avatar?.split('/').at(-1);
+    if (fileName) unlinkFile(fileName);
 
-    // DB dan barcha avatarlarni o‘chirish
-    await this.prisma.avatar.deleteMany({ where: { ownerId: profile.userId } });
-    // Diskdan fayllarni o‘chirish
-    for (const avatar of avatars) {
-      const fileName = avatar.file.split("/").at(-1);
-      if (fileName) {
-        unlinkFile(fileName);
-      }
-    }
-
-    // DB dan profilni o‘chirish
     await this.prisma.profile.delete({ where: { id } });
 
-    return { message: 'Profile and all related avatars deleted successfully' };
+    return {
+      message: 'Profile deleted successfully',
+      user: profileServiceReturnData(profile.user, profile),
+    };
   }
-
 }

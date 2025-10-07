@@ -1,12 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsString, IsOptional, IsArray } from "class-validator";
-
-export class CreateMessageDto{}
+import { Transform } from "class-transformer"
+export class CreateMessageDto { }
 //
 // === User Message DTO ===
 //
 export class CreateUserMessageDto {
   @ApiProperty({ description: "Chat ID (UserChat jadvalidan)", example: "b8f1d9c2-3456-4a21-a7ef-1234567890ab" })
+  @Transform(e => {
+    console.log(e)
+    return e.obj["chatId"]
+  })
   @IsString()
   chatId: string;
 
@@ -14,6 +18,11 @@ export class CreateUserMessageDto {
   @IsOptional()
   @IsString()
   text?: string;
+
+  @ApiPropertyOptional({ description: "Matn xabari", example: "Salom, yaxshimisiz?" })
+  @IsOptional()
+  @IsString()
+  senderId?: string;
 }
 
 //

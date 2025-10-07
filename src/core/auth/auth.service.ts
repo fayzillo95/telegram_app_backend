@@ -1,12 +1,14 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UsersService } from 'src/modules/users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { JwtSubService } from '../jwt/jwt.service';
 import { EmailService } from '../email/email.service';
 import { CacheService } from './cache.service';
 import { EmailCodeEnum } from 'src/common/types/enum.types';
+import { JwtSubService } from '../jwt/jwt.service';
+import { SessionsService } from '../sessions/sessions.service';
+import { CreateOtpDto } from './dto/create-email.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,10 +19,11 @@ export class AuthService {
     private readonly jwtService: JwtSubService,
     private readonly emailService: EmailService,
     private readonly cacheService: CacheService,
+    private readonly sessionService : SessionsService
   ) {}
 
-  async sendOtp(data: CreateAuthDto) {
-    const exists = await this.userService.findByEMail(data.email);
+  async sendOtp(data: CreateOtpDto) {
+    const exists = await this.userService.findByEmail(data.email);
 
     const code = Math.floor(100000 + Math.random() * 900000);
     await this.emailService.sendResedPasswordVerify(
@@ -37,13 +40,14 @@ export class AuthService {
 
     if (exists) {
       const sessionToken = await this.jwtService.getSessionToken(exists);
+      console.log(exists)
       return {
         sessionToken,
-        verificationUrl: '/api/auth/exists/verification',
+        verificationUrl: 'auth/exists/verification',
       };
     } else {
       return {
-        verificationUrl: '/api/auth/register/verification',
+        verificationUrl: 'auth/register/verification',
       };
     }
   }
@@ -52,11 +56,12 @@ export class AuthService {
     console.log("verificationExistsUser in authService", data)
     const cache = this.cacheService.get(data.email);
     if (!cache || cache.code !== Number(data.code)) {
-      throw new UnauthorizedException('Invalid OTP or expired');
+      throw new BadRequestException('Invalid OTP or expired');
     }
 
     const user = await this.prisma.user.findUnique({where : {id : userId}});
     if (!user) throw new NotFoundException('User not found!');
+    this.cacheService.delete(data.email)
 
     return {
       accessToken: await this.jwtService.getAccessToken(user),
@@ -70,12 +75,12 @@ export class AuthService {
 
     console.log("createUserAndVerifiyCode in authService", cache)
     if (!cache || cache.code != parseInt(data.code)) {
-      throw new UnauthorizedException('Invalid OTP or expired');
+      throw new BadRequestException('Invalid OTP or expired');
     }
 
-    const exists = await this.userService.findByEMail(data.email);
+    const exists = await this.userService.findByEmail(data.email);
     if (exists) {
-      throw new UnauthorizedException('User already exists, use login!');
+      throw new BadRequestException('User already exists, use login!');
     }
 
     const user = await this.prisma.user.create({
@@ -84,7 +89,7 @@ export class AuthService {
         username: data.email.split('@')[0],
       },
     });
-
+    this.cacheService.delete(data.email)
     return {
       accessToken: await this.jwtService.getAccessToken(user),
       user,

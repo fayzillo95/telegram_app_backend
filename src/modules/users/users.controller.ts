@@ -9,17 +9,7 @@ import { JwtPayload } from 'src/common/config/jwt.secrets';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
-
-  @Post()
-  @UseInterceptors(FileInterceptor("avatar",fileStorages(["image"])))
-  create(
-    @Body() createUserDto: CreateUserDto,
-    @UploadedFile() avatar : Express.Multer.File
-  ) {
-    return this.usersService.create(createUserDto,avatar.filename);
-  }
+  constructor(private readonly usersService: UsersService) { }
 
   @Get("get-all")
   findAll() {
@@ -30,14 +20,12 @@ export class UsersController {
   findOne(@UserData() user: JwtPayload) {
     return this.usersService.findOne(user.id);
   }
+  
+  @Get("private/:userId")
+  privateUrl(
+    @Param("userId") userId: string,
+    @UserData() user: JwtPayload
+  ) {
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
   }
 }
