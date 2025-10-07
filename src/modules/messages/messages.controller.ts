@@ -1,6 +1,7 @@
 import { 
   Controller, Get, Post, Body, Patch, Param, Delete, 
-  UseInterceptors
+  UseInterceptors,
+  Put
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { 
@@ -30,16 +31,28 @@ export class MessagesController {
     return this.messagesService.createUserMessage(dto, user.id);
   }
 
+  //   [ {type : "user", messageId : "desncodsncio"}]
   @Get('user/get-all/:chatId')
   findUserMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findUserMessages(chatId);
   }
 
-  @Get("user/get-all")
+  @Get("user/get-one/:id")
   find(
-    @UserData() user : JwtPayload
+    @UserData() user : JwtPayload,
+    @Param("id") id : string
   ){
+    return this.messagesService.findUserChatMessageByMessageId(id)
+  }
 
+  @Put("user/update/:id")
+  updateUserChatMessage(@Param("id") id : string){
+
+  }
+
+  @Delete("user/update/:id")
+  deleteUserChatMessage(@Param("id") id : string){
+    
   }
 
   // === GROUP CHAT ===
@@ -52,6 +65,13 @@ export class MessagesController {
   findGroupMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findGroupMessages(chatId);
   }
+  @Get("group/get-one/:id")
+  findGroupChatMessageByMessageId(
+    @UserData() user : JwtPayload,
+    @Param("id") id : string
+  ){
+    return this.messagesService.findGroupChatMessageByMessageId(id)
+  }
 
   // === CHANNEL CHAT ===
   @Post('channel')
@@ -63,5 +83,11 @@ export class MessagesController {
   findChannelMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findChannelMessages(chatId);
   }
-
+  @Get("channel/get-one/:id")
+  findChannelChatMessageByMessageId(
+    @UserData() user : JwtPayload,
+    @Param("id") id : string
+  ){
+    return this.messagesService.findGroupChatMessageByMessageId(id)
+  }
 }

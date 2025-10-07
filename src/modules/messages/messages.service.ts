@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateChannelMessageDto, CreateGroupMessageDto, CreateUserMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { messageFindEntity, messageReturnData } from './entities/message.entity';
+import { checkExistsResurs } from 'src/common/types/check.functions.types';
 
 @Injectable()
 export class MessagesService {
@@ -86,6 +87,45 @@ export class MessagesService {
         return messageReturnData(message)
       })
     }
+  }
+
+  async findUserChatMessageByMessageId(id:string){
+    const message = await this.prisma.messageUserChat.findFirst({
+      where : {id : id},
+      select : messageFindEntity
+    })
+    if(message){
+      const chat = await this.prisma.userChat.findFirst({where : {id : message.chatId}})
+      if(!chat) throw new NotFoundException("Chat not found")
+      return {
+        chat : chat,
+        message : messageReturnData(message)
+      }
+    }else throw new NotFoundException("Message not found !")
+  }
+
+  async findGroupChatMessageByMessageId(id:string){
+    const message = await this.prisma.messageGroup.findFirst({
+      where : {id : id},
+      select : messageFindEntity
+    })
+    if(message){
+      return {
+        message : messageReturnData(message)
+      }
+    }else throw new NotFoundException("Message not found !")
+  }
+
+    async findChannelChatMessageByMessageId(id:string){
+    const message = await this.prisma.messageChannel.findFirst({
+      where : {id : id},
+      select : messageFindEntity
+    })
+    if(message){
+      return {
+        message : messageReturnData(message)
+      }
+    }else throw new NotFoundException("Message not found !")
   }
 
   async findAllUserChatInOwnerId(user1Id: string) {

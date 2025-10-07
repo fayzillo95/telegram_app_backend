@@ -83,11 +83,10 @@ export const messageReturnData = (message:returnMessageType) => {
   const { Profile, createdAt: userRegisteredAt, email, isBot, isDeleted, updatedAt: userUpdatedAt, username, lastActivaty } = sender
   const { avatar, firstName, lastName, privateUrl, publicUrl, id: profileId } = Profile[0]
   return {
-    message: { text, files, images, videos, docs, stickers, updatedAt, senderId,chatId },
+    message: {id, text, files, images, videos, docs, stickers, updatedAt, senderId,chatId },
     sender: { firstName, lastName, username, id: senderId, publicUrl, privateUrl, avatar, profileId, email, isBot, lastActivaty }
   }
 }
-
 
 
 @Injectable()

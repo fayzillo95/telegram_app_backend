@@ -8,10 +8,10 @@ datasource db {
 }
 
 enum ChatType {
-  user_chat
-  group_chat
-  channel_chat
-  bot_chat
+  user
+  group
+  channel
+  bot
 }
 
 model User {
@@ -66,7 +66,7 @@ model Profile {
 model GroupChat {
   id                 String   @id @default(uuid())
   ownerId            String   @map("owner_id")
-  type               ChatType @default(group_chat)
+  type               ChatType @default(group)
   title              String?
   description        String?
   publicUrl          String?  @map("public_url")
@@ -83,14 +83,14 @@ model GroupChat {
   @@index([type])
   @@index([createdAt])
   @@index([title])
-  @@map("group_chat")
+  @@map("group")
 }
 
 model ChannelChat {
   id                 String   @id @default(uuid())
   ownerId            String   @map("owner_id")
   subscriptionsCount BigInt   @default(0) @map("subscritions_count")
-  type               ChatType @default(channel_chat)
+  type               ChatType @default(channel)
   title              String?
   description        String?
   publicUrl          String?  @map("public_url")
@@ -106,14 +106,14 @@ model ChannelChat {
   @@index([type])
   @@index([createdAt])
   @@index([title])
-  @@map("channel_chat")
+  @@map("channel")
 }
 
 model UserChat {
   id        String   @id @default(uuid())
   user1Id   String   @map("user_1_id")
   user2Id   String   @map("user_2_id")
-  type      ChatType @default(user_chat)
+  type      ChatType @default(user)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -125,7 +125,7 @@ model UserChat {
   @@index([user2Id])
   @@index([user1Id, user2Id])
   @@index([type])
-  @@map("user_chat")
+  @@map("user")
 }
 
 model MessageChannel {
@@ -212,7 +212,7 @@ model MessageUserChat {
   @@index([chatId])
   @@index([replayId])
   @@index([senderId])
-  @@map("messages_user_chat")
+  @@map("messages_user")
 }
 
 model BotDetails {

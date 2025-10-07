@@ -1,9 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateUserchatDto } from './dto/create-userchat.dto';
-import { UpdateUserchatDto } from './dto/update-userchat.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { messageFindEntity } from '../messages/entities/message.entity';
+import { messageFindEntity, messageReturnData } from '../messages/entities/message.entity';
 
 @Injectable()
 export class UserchatsService {
@@ -44,26 +42,18 @@ export class UserchatsService {
         ],
       },
       include: {
-        messages : {
-          select : messageFindEntity
+        messages: {
+          select: messageFindEntity
         }
       },
     });
 
     if (oldChat) {
       const { messages, id, createdAt, type, updatedAt, } = oldChat
-      const result = messages.map(({ _count, sender, docs, files, createdAt, id, images, senderId, stickers, text, updatedAt, videos }) => {
-        const { Profile, createdAt: userRegisteredAt, email, isBot, isDeleted, updatedAt: userUpdatedAt, username, lastActivaty } = sender
-        const { avatar, firstName, lastName, privateUrl, publicUrl, id: profileId } = Profile[0]
-        return {
-          message: { text, files, images, videos, docs, stickers, updatedAt, senderId },
-          sender: { firstName, lastName, username, id: senderId, publicUrl, privateUrl, avatar, profileId, email, isBot, lastActivaty }
-        }
-      })
       return {
         message: 'Chat allaqachon mavjud',
-        chat: { chatId : id,type,createdAt,updatedAt, name, image },
-        messages: result,
+        chat: { chatId: id, type, createdAt, updatedAt, name, image },
+        messages: messages.map((message) => messageReturnData(message)),
       };
     }
 
@@ -78,8 +68,6 @@ export class UserchatsService {
       messages: [],
     };
   }
-
-  //  FIND ALL
 
   async findAll(user1Id: string) {
     const allChats = await this.prisma.userChat.findMany({
@@ -101,22 +89,16 @@ export class UserchatsService {
           }
         },
         messages: {
+          select: messageFindEntity,
           orderBy: {
             createdAt: 'desc'
           },
-          include: {
-            sender: {
-              include: {
-                Profile: true
-              }
-            }
-          }
+          take: 1
         },
       },
       orderBy: {
         updatedAt: "asc"
       },
-      take: 1
     },);
 
     // Har bir chat uchun flatten qilingan ma'lumot
@@ -131,17 +113,7 @@ export class UserchatsService {
 
       // Last Message - flatten qilingan
       const lastMessageData = chat.messages[0];
-      const lastMessage = lastMessageData ? {
-        id: lastMessageData.id,
-        text: lastMessageData.text ?? null,
-        senderId: lastMessageData.senderId ?? null,
-        senderName: lastMessageData.sender?.Profile?.[0]
-          ? `${lastMessageData.sender.Profile[0].firstName ?? ""} ${lastMessageData.sender.Profile[0].lastName ?? ""}`.trim()
-          : "Unknown",
-        createdAt: lastMessageData.createdAt ?? null,
-        isReading: lastMessageData.isReading,
-        isUpdated: lastMessageData.isUpdated
-      } : null;
+      const lastMessage = lastMessageData ? messageReturnData(lastMessageData) : null;
 
       return {
         id: chat.id,
