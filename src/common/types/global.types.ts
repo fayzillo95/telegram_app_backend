@@ -21,11 +21,6 @@ export enum ModelsEnum {
 export enum ModelsEnumInPrisma {
       USERS = "user",
       PROFILE = "profle",
-      AVATAR = "avatar",
-      CHAT_FILES = "channelFile",
-      GROUP_FILES = "groupFile",
-      CHANNEL_FILES = "channelFile",
-      USER_CHAT_FILES = "userChatFile",
       GROUPT_CHAT = "groupChat",
       CHANNEL_CHAT = "channelChat",
       USER_CHAT = "userChat",

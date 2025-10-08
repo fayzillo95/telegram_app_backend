@@ -18,7 +18,7 @@ export class AuthController {
     if (result.sessionToken) {
       this.setTokensToCookies(res, null, result.sessionToken, null)
     }
-    return res.json(result)
+    return res.json({result,verificationUrl})
   }
 
   @Public()
@@ -29,7 +29,6 @@ export class AuthController {
   ) {
     const result = await this.authService.createUserAndVerifiyCode(otpData);
 
-    // 🍪 Tokenlarni cookie'ga yozish
     this.setTokensToCookies(res, result.accessToken, null, null);
 
     return res.json(
@@ -37,6 +36,7 @@ export class AuthController {
         message: 'User created and verified successfully!',
         routerUrl: result.routerUrl,
         user: result.user,
+        accessToken : result.accessToken
       }
     );
   }
@@ -57,6 +57,7 @@ export class AuthController {
         message: 'User verified successfully!',
         routerUrl: result.routerUrl,
         user: result.user,
+        accessToken : result.accessToken
       }
     );
   }

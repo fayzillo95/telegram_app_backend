@@ -69,9 +69,10 @@ model GroupChat {
   type               ChatType @default(group)
   title              String?
   description        String?
+  logo               String
   publicUrl          String?  @map("public_url")
   privateUrl         String?  @map("private_url")
-  subscriptionsCount BigInt   @default(0) @map("subscritions_count")
+  subscriptionsCount Int   @default(1) @map("subscritions_count")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -89,9 +90,10 @@ model GroupChat {
 model ChannelChat {
   id                 String   @id @default(uuid())
   ownerId            String   @map("owner_id")
-  subscriptionsCount BigInt   @default(0) @map("subscritions_count")
+  subscriptionsCount Int   @default(1) @map("subscritions_count")
   type               ChatType @default(channel)
   title              String?
+  logo               String
   description        String?
   publicUrl          String?  @map("public_url")
   privateUrl         String?  @map("private_url")

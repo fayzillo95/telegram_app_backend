@@ -1,7 +1,6 @@
 import { 
-  Controller, Get, Post, Body, Patch, Param, Delete, 
-  UseInterceptors,
-  Put
+  Controller, Get, Post, Body, Param, Delete, 
+  UseInterceptors, UploadedFiles 
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { 
@@ -9,85 +8,92 @@ import {
   CreateGroupMessageDto, 
   CreateUserMessageDto 
 } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { UserData } from 'src/global/decorators/auth.decorators';
 import { JwtPayload } from 'src/common/config/jwt.secrets';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { fileStorages } from 'src/common/types/upload_types';
-import { MessagesInterceptor } from './entities/message.entity';
+import { groupFilesByField } from 'src/common/types/filter.file.types';
 
 @Controller('messages')
-@UseInterceptors(MessagesInterceptor)
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   // === USER CHAT ===
+  @UseInterceptors(AnyFilesInterceptor(fileStorages([])))
   @Post('user')
   createUser(
     @Body() dto: CreateUserMessageDto,
     @UserData() user: JwtPayload,
+    @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    console.log(dto)
-    return this.messagesService.createUserMessage(dto, user.id);
+    const fileFields = files ? groupFilesByField(files) : null;
+    return this.messagesService.createUserMessage(dto, user.id, fileFields);
   }
 
-  //   [ {type : "user", messageId : "desncodsncio"}]
   @Get('user/get-all/:chatId')
   findUserMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findUserMessages(chatId);
   }
 
-  @Get("user/get-one/:id")
-  find(
-    @UserData() user : JwtPayload,
-    @Param("id") id : string
-  ){
-    return this.messagesService.findUserChatMessageByMessageId(id)
+  @Get('user/get-one/:id')
+  findUserChatMessage(@UserData() user: JwtPayload, @Param('id') id: string) {
+    return this.messagesService.findUserChatMessageByMessageId(id);
   }
 
-  @Put("user/update/:id")
-  updateUserChatMessage(@Param("id") id : string){
-
-  }
-
-  @Delete("user/update/:id")
-  deleteUserChatMessage(@Param("id") id : string){
-    
+  @Delete('user/remove-one/:id')
+  deleteUserChatMessage(@Param('id') id: string) {
+    return this.messagesService.deleteUserChatMessageById(id);
   }
 
   // === GROUP CHAT ===
+  @UseInterceptors(AnyFilesInterceptor(fileStorages([])))
   @Post('group')
-  createGroup(@Body() dto: CreateGroupMessageDto) {
-    return this.messagesService.createGroupMessage(dto);
+  createGroup(
+    @Body() dto: CreateGroupMessageDto,
+    @UploadedFiles() files?: Express.Multer.File[]
+  ) {
+    const fileFields = files ? groupFilesByField(files) : null;
+    return this.messagesService.createGroupMessage(dto, fileFields);
   }
 
   @Get('group/:chatId')
   findGroupMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findGroupMessages(chatId);
   }
-  @Get("group/get-one/:id")
-  findGroupChatMessageByMessageId(
-    @UserData() user : JwtPayload,
-    @Param("id") id : string
-  ){
-    return this.messagesService.findGroupChatMessageByMessageId(id)
+
+  @Get('group/get-one/:id')
+  findGroupChatMessageByMessageId(@Param('id') id: string) {
+    return this.messagesService.findGroupChatMessageByMessageId(id);
+  }
+
+  @Delete('group/remove-one/:id')
+  deleteGroupChatMessage(@Param('id') id: string) {
+    return this.messagesService.deleteGroupChatMessageById(id);
   }
 
   // === CHANNEL CHAT ===
+  @UseInterceptors(AnyFilesInterceptor(fileStorages([])))
   @Post('channel')
-  createChannel(@Body() dto: CreateChannelMessageDto) {
-    return this.messagesService.createChannelMessage(dto);
+  createChannel(
+    @Body() dto: CreateChannelMessageDto,
+    @UploadedFiles() files?: Express.Multer.File[]
+  ) {
+    const fileFields = files ? groupFilesByField(files) : null;
+    return this.messagesService.createChannelMessage(dto, fileFields);
   }
 
   @Get('channel/:chatId')
   findChannelMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findChannelMessages(chatId);
   }
-  @Get("channel/get-one/:id")
-  findChannelChatMessageByMessageId(
-    @UserData() user : JwtPayload,
-    @Param("id") id : string
-  ){
-    return this.messagesService.findGroupChatMessageByMessageId(id)
+
+  @Get('channel/get-one/:id')
+  findChannelChatMessageByMessageId(@Param('id') id: string) {
+    return this.messagesService.findChannelChatMessageByMessageId(id);
+  }
+
+  @Delete('channel/remove-one/:id')
+  deleteChannelChatMessage(@Param('id') id: string) {
+    return this.messagesService.deleteChannelChatMessageById(id);
   }
 }

@@ -8,9 +8,11 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './global/guards/jwt.auth.guard';
 import { ProfileModule } from './modules/profile/profile.module';
+import { GroupSubscriptionsModule } from './modules/group-subscriptions/group-subscriptions.module';
+import { ChannelSubscriptionsModule } from './modules/channel-subscriptions/channel-subscriptions.module';
 
 @Module({
-  imports: [CoreModule, UsersModule, GroupesModule, ChannelsModule, UserchatsModule, MessagesModule, ProfileModule],
+  imports: [CoreModule, UsersModule, GroupesModule, ChannelsModule, UserchatsModule, MessagesModule, ProfileModule, GroupSubscriptionsModule, ChannelSubscriptionsModule],
   providers : [
     {
       provide : APP_GUARD,

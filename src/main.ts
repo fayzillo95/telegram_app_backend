@@ -5,6 +5,6 @@ import { initGlobalApp } from './core/use_initilation';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   initGlobalApp(app)
-  await app.listen(process.env.PORT ?? 15976);
+  await app.listen(process.env.PORT ?? 15976,"0.0.0.0");
 }
 bootstrap();

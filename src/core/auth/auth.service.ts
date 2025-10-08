@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
 import { UsersService } from 'src/modules/users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,7 +6,6 @@ import { EmailService } from '../email/email.service';
 import { CacheService } from './cache.service';
 import { EmailCodeEnum } from 'src/common/types/enum.types';
 import { JwtSubService } from '../jwt/jwt.service';
-import { SessionsService } from '../sessions/sessions.service';
 import { CreateOtpDto } from './dto/create-email.dto';
 
 @Injectable()
@@ -19,7 +17,6 @@ export class AuthService {
     private readonly jwtService: JwtSubService,
     private readonly emailService: EmailService,
     private readonly cacheService: CacheService,
-    private readonly sessionService : SessionsService
   ) {}
 
   async sendOtp(data: CreateOtpDto) {

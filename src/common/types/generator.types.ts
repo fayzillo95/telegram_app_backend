@@ -1,7 +1,7 @@
 import { ConfigService } from "@nestjs/config";
 import { EmailCodeEnum } from "./enum.types";
 import { extname, join } from "path";
-import { archiveExtensions, documentExtensions, getMymtype, imageExtensions, videoExtensions } from "./filter.file.types";
+import { archiveExtensions, documentExtensions, getMimeType, imageExtensions, videoExtensions } from "./filter.file.types";
 import { createReadStream, existsSync, mkdirSync } from "fs";
 import { Response } from "express";
 import { stat } from "fs/promises";
@@ -79,7 +79,7 @@ export async function headerDataStream(
 
     const fileSize = (await stat(filePath)).size;
     const range = res.req.headers.range;
-    const mimeType = getMymtype(fileName);
+    const mimeType = getMimeType(fileName);
 
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');

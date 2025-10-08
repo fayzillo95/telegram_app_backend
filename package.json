@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "p:deploy" : "npx prisma migrate reset && npx prisma migrate deploy && npx prisma generate "
+    "p:deploy" : "npx prisma migrate deploy && npx prisma migrate deploy && npx prisma generate"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

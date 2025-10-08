@@ -20,7 +20,6 @@ export class UsersService {
     private config: ConfigService,
   ) {}
 
-  /** 🧠 CREATE USER */
   async create(dto: CreateUserDto, avatar?: string) {
     try {
       if (dto.email)
@@ -60,7 +59,6 @@ export class UsersService {
     }
   }
 
-  /** 🧠 GET ALL USERS */
   async findAll() {
     const users = await this.prisma.user.findMany({
       where  :{
@@ -86,13 +84,11 @@ export class UsersService {
     };
   }
 
-  /** 🧠 FIND BY EMAIL */
   async findByEmail(email: string) {
     const user = await this.prisma.user.findFirst({ where: { email } });
     return user;
   }
 
-  /** 🧠 PRIVATE URL */
   async findPrivateUrl(userId: string) {
     const user = await checkExistsResurs<User>(
       this.prisma,
@@ -105,7 +101,6 @@ export class UsersService {
     return userReturnData(user, profile, 'User private URL fetched successfully');
   }
 
-  /** 🧠 FIND ONE */
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
@@ -115,7 +110,6 @@ export class UsersService {
     return userReturnData(user, user.Profile?.[0], `User ${id} fetched successfully`);
   }
 
-  /** 🧠 UPDATE */
   async update(id: string, data: UpdateUserDto) {
     if(data.email) await checAlreadykExistsResurs(this.prisma,ModelsEnumInPrisma.USERS,"email",data.email)
     if(data.username) await checAlreadykExistsResurs(this.prisma,ModelsEnumInPrisma.USERS,"username",data.username)  
@@ -134,7 +128,6 @@ export class UsersService {
     return userReturnData(updatedUser, profile, `This action updates a #${id} user`);
   }
 
-  /** 🧠 REMOVE */
   async remove(id: string) {
     const user  = await checkExistsResurs<User>(this.prisma,ModelsEnumInPrisma.USERS,"id",id)
     await this.prisma.user.update({

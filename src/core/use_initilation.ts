@@ -5,7 +5,6 @@ import { MulterValidationExceptionFilter } from "./error/validation.filter";
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes'; // Import SwaggerTheme
 import * as cookieParser from 'cookie-parser';
 import { DeviceMiddleware } from "src/global/middlewares/device.middleware";
-import { JwtAuthGuard } from "src/global/guards/jwt.auth.guard";
 
 export const initGlobalApp = (app: INestApplication) => {
     const config = new DocumentBuilder().setTitle("Edfix Clone").build()
@@ -29,11 +28,10 @@ export const initGlobalApp = (app: INestApplication) => {
         customSiteTitle: 'My API Docs',
     })
     app.enableCors({
-        origin: "*",
+        origin: true,
     });
     app.use(new DeviceMiddleware().use)
     app.useGlobalFilters(new MulterValidationExceptionFilter())
-    app.enableCors()
-    console.log("Init functio complieted\n http://192.168.34.176:15976/api-docs")
+    console.log("Init functio complieted\n http://192.168.32.197:15976/api-docs")
 
 }
