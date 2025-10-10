@@ -16,8 +16,8 @@ export const userReturnData = (
     };
   }
 
-  const { id: userId, username, email, isBot, isDeleted, createdAt, updatedAt } = user;
-
+  const { id: userId, username, email, isBot, isDeleted, createdAt, updatedAt ,lastActivaty} = user;
+  console.log(lastActivaty)
   const {
     id: profileId = '',
     firstName = null,
@@ -41,12 +41,10 @@ export const userReturnData = (
       email,
       avatar,
       bio,
-      isDeleted,
       isBot,
       publicUrl,
       privateUrl,
-      createdAt,
-      updatedAt,
+      lastActivaty : lastActivaty.toString()
     },
   };
 };

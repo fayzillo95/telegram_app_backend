@@ -14,11 +14,10 @@ export class AuthController {
   @Post('send-otp')
   async sendOtp(@Body() createAuthDto: CreateOtpDto, @Res() res: Response) {
     const { verificationUrl, ...result } = await this.authService.sendOtp(createAuthDto);
-    console.log(result)
     if (result.sessionToken) {
       this.setTokensToCookies(res, null, result.sessionToken, null)
     }
-    return res.json({result,verificationUrl})
+    return res.json({ sessionToken: result.sessionToken, verificationUrl })
   }
 
   @Public()
@@ -36,7 +35,7 @@ export class AuthController {
         message: 'User created and verified successfully!',
         routerUrl: result.routerUrl,
         user: result.user,
-        accessToken : result.accessToken
+        accessToken: result.accessToken
       }
     );
   }
@@ -57,7 +56,7 @@ export class AuthController {
         message: 'User verified successfully!',
         routerUrl: result.routerUrl,
         user: result.user,
-        accessToken : result.accessToken
+        accessToken: result.accessToken
       }
     );
   }

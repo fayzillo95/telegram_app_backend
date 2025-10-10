@@ -29,7 +29,7 @@ export const fileStorages = (allowedMimes: string[]) => ({
 function fileFilters(allowedMimes: string[]) {
   return (req : Request, file : Express.Multer.File, cb) => {
     const mime = file.mimetype.split('/')[0];
-    if (!allowedMimes.includes(mime) || allowedMimes.length === 0) {
+    if (!allowedMimes.includes(mime) && allowedMimes.length !== 0) {
       cb(
         new UnsupportedMediaTypeException(
           `Fayl turi [${allowedMimes.join(', ')}] bo'lishi kerak`

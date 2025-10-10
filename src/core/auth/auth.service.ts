@@ -7,6 +7,7 @@ import { CacheService } from './cache.service';
 import { EmailCodeEnum } from 'src/common/types/enum.types';
 import { JwtSubService } from '../jwt/jwt.service';
 import { CreateOtpDto } from './dto/create-email.dto';
+import { userReturnData } from 'src/modules/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -56,13 +57,13 @@ export class AuthService {
       throw new BadRequestException('Invalid OTP or expired');
     }
 
-    const user = await this.prisma.user.findUnique({where : {id : userId}});
+    const user = await this.prisma.user.findUnique({where : {id : userId},include : {Profile : true}});
     if (!user) throw new NotFoundException('User not found!');
     this.cacheService.delete(data.email)
 
     return {
       accessToken: await this.jwtService.getAccessToken(user),
-      user,
+      user : userReturnData(user,user.Profile[0]),
       routerUrl: '/',
     };
   }

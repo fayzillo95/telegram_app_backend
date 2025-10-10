@@ -5,9 +5,14 @@ import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { ImageGenerator } from 'src/common/types/generator.types';
 import { checkExistsResurs } from 'src/common/types/check.functions.types';
-import { ChannelChat, User } from '@prisma/client';
 import { ModelsEnumInPrisma } from 'src/common/types/global.types';
-import { profileServiceReturnData } from '../profile/entities/profile.entity';
+import { channelChatReturnData } from '../chats/entities/chat.entity';
+import { User } from '@prisma/client';
+
+/**
+ * 🎯 ChannelChat modelini frontendga qaytarish uchun yagona format.
+ */
+
 
 @Injectable()
 export class ChannelsService {
@@ -15,11 +20,13 @@ export class ChannelsService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly imageGenerator: ImageGenerator,
-  ) { }
+  ) {}
 
-  // ✅ CREATE
+  // ---------------------------------------------------------------------------
+  // ✅ CREATE CHANNEL
+  // ---------------------------------------------------------------------------
   async create(data: CreateChannelDto, ownerId: string, logo?: Express.Multer.File) {
-    // 1. user mavjudligini tekshirish
+    // 1️⃣ User mavjudligini tekshirish
     const existsUser = await checkExistsResurs<User>(
       this.prisma,
       ModelsEnumInPrisma.USERS,
@@ -27,46 +34,39 @@ export class ChannelsService {
       ownerId,
     );
 
-    // 2. title unique ekanligini tekshirish
+    // 2️⃣ Channel nomi unique ekanligini tekshirish
     const oldChannel = await this.prisma.channelChat.findFirst({
       where: { title: data.title, ownerId },
     });
-
-    if (oldChannel) {
+    if (oldChannel)
       throw new ConflictException(`${data.title} already exists by user ${existsUser.username}`);
-    }
 
-    // 3. logo yaratish
+    // 3️⃣ Logoni yaratish
     const image = logo
       ? logo.filename
       : this.imageGenerator.generateAvatar(data.title.slice(0, 2), this.config);
 
-    // 4. yangi channel yaratish
+    // 4️⃣ Channel yaratish
     const newChannel = await this.prisma.channelChat.create({
       data: {
         ownerId,
         title: data.title,
         logo: image,
         description: data.description ?? null,
-        subscriptionsCount: 1, // owner avtomatik obuna bo‘ladi
+        subscriptionsCount: 1,
       },
     });
 
-    // 5. ownerni avtomatik subscribe qilish
-    const subscription = await this.prisma.channelSubscription.create({
+    // 5️⃣ Ownerni avtomatik subscribe qilish
+    await this.prisma.channelSubscription.create({
       data: {
         chatId: newChannel.id,
         subscriberId: ownerId,
       },
-      include: {
-        subscriber: {
-          include: { Profile: true },
-        },
-      },
     });
 
-    // 6. subscription countni yangilash
-    const updatedChannel = await this.prisma.channelChat.update({
+    // 6️⃣ Subscriptions countni yangilash
+    const updated = await this.prisma.channelChat.update({
       where: { id: newChannel.id },
       data: {
         subscriptionsCount: {
@@ -75,68 +75,33 @@ export class ChannelsService {
           }),
         },
         publicUrl: `channel-subscriptions/create/${newChannel.id}`,
-        privateUrl: `channels/get-one/${newChannel.id}`
+        privateUrl: `channels/get-one/${newChannel.id}`,
       },
-      select: {
-        id: true,
-        title: true,
-        logo: true,
-        type: true,
-        description: true,
-        publicUrl: true,
-        privateUrl: true,
-        subscriptionsCount: true,
-        ownerId: true,
-        createdAt: true,
-      },
+      include: { owner: { include: { Profile: true } } },
     });
 
-    // 7. natijani qaytarish
+    // 7️⃣ Natijani qaytarish
     return {
       message: 'Channel created successfully',
-      chat: updatedChannel,
-      owner: profileServiceReturnData(
-        subscription.subscriber,
-        subscription.subscriber.Profile?.[0],
-      ),
+      chat: channelChatReturnData(updated),
     };
   }
 
+  // ---------------------------------------------------------------------------
   // ✅ GET ALL CHANNELS
+  // ---------------------------------------------------------------------------
   async findAll() {
     const channels = await this.prisma.channelChat.findMany({
       orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        logo: true,
-        description: true,
-        publicUrl: true,
-        privateUrl: true,
-        subscriptionsCount: true,
-        createdAt : true,
-        updatedAt  :true,
-        owner: {
-          include: { Profile: true },
-        },
-      },
+      include: { owner: { include: { Profile: true } } },
     });
 
-    return channels.map((ch) => ({
-      id: ch.id,
-      title: ch.title,
-      logo: ch.logo,
-      description: ch.description,
-      publicUrl: ch.publicUrl,
-      privateUrl: ch.privateUrl,
-      subscriptionsCount: Number(ch.subscriptionsCount),
-      createdAt : ch.createdAt,
-      updatedAt : ch.updatedAt
-      // owner: profileServiceReturnData(ch.owner, ch.owner.Profile?.[0]),
-    }));
+    return channels.map((ch) => channelChatReturnData(ch));
   }
 
+  // ---------------------------------------------------------------------------
   // ✅ GET ONE CHANNEL
+  // ---------------------------------------------------------------------------
   async findOne(id: string) {
     const channel = await this.prisma.channelChat.findUnique({
       where: { id },
@@ -148,23 +113,22 @@ export class ChannelsService {
 
     if (!channel) throw new NotFoundException('Channel not found');
 
-    return {
-      id: channel.id,
-      title: channel.title,
-      logo: channel.logo,
-      description: channel.description,
-      publicUrl: channel.publicUrl,
-      privateUrl: channel.privateUrl,
+    // `_count.subscriptions` ni `subscriptionsCount` sifatida qo‘shamiz
+    return channelChatReturnData({
+      ...channel,
       subscriptionsCount: channel._count.subscriptions,
-      owner: profileServiceReturnData(channel.owner, channel.owner.Profile?.[0]),
-    };
+    });
   }
 
+  // ---------------------------------------------------------------------------
   // ✅ UPDATE CHANNEL
+  // ---------------------------------------------------------------------------
   async update(id: string, data: UpdateChannelDto, ownerId: string, logo?: Express.Multer.File) {
-    const channel = await this.prisma.channelChat.findUnique({ where: { id } });
+    const channel = await this.prisma.channelChat.findUnique({
+      where: { id },
+      include: { owner: true },
+    });
     if (!channel) throw new NotFoundException('Channel not found');
-
     if (channel.ownerId !== ownerId)
       throw new ConflictException('Only the owner can update this channel');
 
@@ -177,28 +141,29 @@ export class ChannelsService {
         privateUrl: data.privateUrl ?? channel.privateUrl,
         logo: logo ? logo.filename : channel.logo,
       },
-      include: {
-        owner: { include: { Profile: true } },
-      },
+      include: { owner: { include: { Profile: true } } },
     });
 
     return {
       message: 'Channel updated successfully',
-      chat: updated,
-      owner: profileServiceReturnData(updated.owner, updated.owner.Profile?.[0]),
+      chat: channelChatReturnData(updated),
     };
   }
 
+  // ---------------------------------------------------------------------------
   // ✅ REMOVE CHANNEL
+  // ---------------------------------------------------------------------------
   async remove(id: string, ownerId: string) {
     const channel = await this.prisma.channelChat.findUnique({ where: { id } });
     if (!channel) throw new NotFoundException('Channel not found');
-
     if (channel.ownerId !== ownerId)
       throw new ConflictException('Only the owner can delete this channel');
 
     await this.prisma.channelChat.delete({ where: { id } });
 
-    return { message: 'Channel deleted successfully', id };
+    return {
+      message: 'Channel deleted successfully',
+      chat: channelChatReturnData(channel),
+    };
   }
 }

@@ -16,9 +16,11 @@ import { JsonValue } from '@prisma/client/runtime/library';
 async function deleteMessageFiles(message: any) {
   const { files, docs, images, stickers, videos } = message;
   [files, docs, images, stickers, videos].forEach((arr: JsonValue) => {
+    console.log(arr)
     if (Array.isArray(arr)) {
       arr.forEach((val) => {
-        if (typeof val === 'string') unlinkFile(val);
+        console.log(val)
+        if (typeof val === 'string') unlinkFile(val.split("/").at(-1) || "");
       });
     }
   });
@@ -126,6 +128,9 @@ export class MessagesService {
     const message = await this.prisma.messageGroup.findFirst({
       where: { id },
       select: messageFindEntity,
+      orderBy : {
+        createdAt : "desc"
+      }
     });
     if (!message) throw new NotFoundException('Message not found!');
     return { message: messageReturnData(message) };
@@ -135,6 +140,9 @@ export class MessagesService {
     const message = await this.prisma.messageChannel.findFirst({
       where: { id },
       select: messageFindEntity,
+      orderBy : {
+        createdAt : "asc"
+      }
     });
     if (!message) throw new NotFoundException('Message not found!');
     return { message: messageReturnData(message) };

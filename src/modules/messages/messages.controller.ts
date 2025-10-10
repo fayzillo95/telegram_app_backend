@@ -13,10 +13,11 @@ import { JwtPayload } from 'src/common/config/jwt.secrets';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { fileStorages } from 'src/common/types/upload_types';
 import { groupFilesByField } from 'src/common/types/filter.file.types';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(private readonly messagesService: MessagesService,private readonly config : ConfigService) {}
 
   // === USER CHAT ===
   @UseInterceptors(AnyFilesInterceptor(fileStorages([])))
@@ -26,7 +27,7 @@ export class MessagesController {
     @UserData() user: JwtPayload,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    const fileFields = files ? groupFilesByField(files) : null;
+    const fileFields = files ? groupFilesByField(this.config,files) : null;
     return this.messagesService.createUserMessage(dto, user.id, fileFields);
   }
 
@@ -52,11 +53,11 @@ export class MessagesController {
     @Body() dto: CreateGroupMessageDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    const fileFields = files ? groupFilesByField(files) : null;
+    const fileFields = files ? groupFilesByField(this.config,files) : null;
     return this.messagesService.createGroupMessage(dto, fileFields);
   }
 
-  @Get('group/:chatId')
+  @Get('group/get-all/:chatId')
   findGroupMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findGroupMessages(chatId);
   }
@@ -78,11 +79,11 @@ export class MessagesController {
     @Body() dto: CreateChannelMessageDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    const fileFields = files ? groupFilesByField(files) : null;
+    const fileFields = files ? groupFilesByField(this.config,files) : null;
     return this.messagesService.createChannelMessage(dto, fileFields);
   }
 
-  @Get('channel/:chatId')
+  @Get('channel/get-all/:chatId')
   findChannelMessages(@Param('chatId') chatId: string) {
     return this.messagesService.findChannelMessages(chatId);
   }

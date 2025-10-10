@@ -1,4 +1,6 @@
 import { extname } from "path";
+import { urlGenerator } from "./generator.types";
+import { ConfigService } from "@nestjs/config";
 
 /* =========================
  *  FILE EXTENSIONS
@@ -147,7 +149,7 @@ export function getFieldName(fileName: string): string {
 /* =========================
  *  GROUP BY FIELD (optional)
  * ========================= */
-export function groupFilesByField(files?: Express.Multer.File[] | null) {
+export function groupFilesByField(config :ConfigService,files?: Express.Multer.File[] | null,) {
   if (!files || !Array.isArray(files)) return {};
 
   const result: Record<string, string[]> = {};
@@ -155,7 +157,7 @@ export function groupFilesByField(files?: Express.Multer.File[] | null) {
   for (const file of files) {
     const field = getFieldName(file.originalname);
     if (!result[field]) result[field] = [];
-    result[field].push(file.path);
+    result[field].push(urlGenerator(config,file.filename));
   }
 
   return result;
