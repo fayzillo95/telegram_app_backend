@@ -11,9 +11,10 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { GroupSubscriptionsModule } from './modules/group-subscriptions/group-subscriptions.module';
 import { ChannelSubscriptionsModule } from './modules/channel-subscriptions/channel-subscriptions.module';
 import { ChatsModule } from './modules/chats/chats.module';
+import { SoketModule } from './soket/soket.module';
 
 @Module({
-  imports: [CoreModule, UsersModule, GroupesModule, ChannelsModule, UserchatsModule, MessagesModule, ProfileModule, GroupSubscriptionsModule, ChannelSubscriptionsModule, ChatsModule],
+  imports: [CoreModule, UsersModule, GroupesModule, ChannelsModule, UserchatsModule, MessagesModule, ProfileModule, GroupSubscriptionsModule, ChannelSubscriptionsModule, ChatsModule, SoketModule],
   providers : [
     {
       provide : APP_GUARD,

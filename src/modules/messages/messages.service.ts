@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { 
-  CreateChannelMessageDto, 
-  CreateGroupMessageDto, 
-  CreateUserMessageDto 
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  CreateChannelMessageDto,
+  CreateGroupMessageDto,
+  CreateUserMessageDto
 } from './dto/create-message.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +12,7 @@ import { ModelsEnumInPrisma } from 'src/common/types/global.types';
 import { MessageUserChat, User, UserChat } from '@prisma/client';
 import { unlinkFile } from 'src/common/types/file.cotroller.typpes';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { SessionsService } from 'src/soket/soket.service';
 
 async function deleteMessageFiles(message: any) {
   const { files, docs, images, stickers, videos } = message;
@@ -30,8 +31,9 @@ async function deleteMessageFiles(message: any) {
 export class MessagesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService
-  ) {}
+    private readonly config: ConfigService,
+    private readonly sessionService: SessionsService,
+  ) { }
 
   // === USER CHAT ===
   async createUserMessage(
@@ -47,6 +49,7 @@ export class MessagesService {
       data: { ...dto, senderId, ...(files || {}) },
       select: messageFindEntity,
     });
+    this.sessionService.sendToUser(dto.senderId || senderId, messageReturnData(message), "create-msg",)
     return messageReturnData(message);
   }
 
@@ -63,6 +66,8 @@ export class MessagesService {
       data: { ...dto, ...(files || {}) },
       select: messageFindEntity,
     });
+    this.sessionService.sendToUser(senderId, messageReturnData(message), "create-msg",)
+
     return messageReturnData(message);
   }
 
@@ -79,29 +84,69 @@ export class MessagesService {
       data: { ...dto, ...(files || {}) },
       select: messageFindEntity,
     });
+    this.sessionService.sendToUser(senderId, messageReturnData(message), "create-msg",)
+
     return messageReturnData(message);
   }
 
   // === FIND ===
-  async findUserMessages(chatId: string) {
-    await checkExistsResurs<UserChat>(this.prisma, ModelsEnumInPrisma.USER_CHAT, 'id', chatId);
-    const messages = await this.prisma.messageUserChat.findMany({
-      where: { chatId },
-      select: messageFindEntity,
+  async findUserMessages(chatId: string, userId: string) {
+    this.sessionService.sendToUser(userId, { userId: userId, isOnline:true })
+    
+    // 1. Chat mavjudligini tekshiramiz
+    const Existschat = await checkExistsResurs<UserChat>(
+      this.prisma,
+      ModelsEnumInPrisma.USER_CHAT,
+      'id',
+      chatId
+    );
+    this.sessionService.sendToUser(userId, { userId: Existschat.user1Id === userId ? Existschat.user2Id : Existschat.user1Id, isOnline:true })
+
+    // 2. Shu foydalanuvchi ushbu chatning ishtirokchisi ekanligini tekshiramiz
+    const chat = await this.prisma.userChat.findFirst({
+      where: {
+        id: chatId,
+        OR: [
+          { user1Id: userId },
+          { user2Id: userId },
+        ],
+      },
     });
-    return { messages: messages.map(messageReturnData) };
+
+    if (!chat) {
+      throw new ForbiddenException('Siz bu chatga kirish huquqiga ega emassiz');
+    }
+
+    // 3. Chatga tegishli barcha xabarlarni olish
+    const messages = await this.prisma.messageUserChat.findMany({
+      where: {
+        chatId,
+      },
+      select: messageFindEntity,
+      orderBy: { createdAt: 'asc' }, // ixtiyoriy
+    });
+
+    return { messages: messages.map((msg => {
+      if(msg.senderId !== userId) {
+        this.sessionService.sendToUser(userId,{userId,isOnline : this.sessionService.chekIsOnlie(msg.senderId)},"online")
+      }
+      return messageReturnData(msg)
+    })) };
   }
 
-  async findGroupMessages(chatId: string) {
-    await checkExistsResurs<UserChat>(this.prisma, ModelsEnumInPrisma.GROUPT_CHAT, 'id', chatId);
+  async findGroupMessages(chatId: string,userId :string) {
+
+    const chat = await checkExistsResurs<UserChat>(this.prisma, ModelsEnumInPrisma.GROUPT_CHAT, 'id', chatId);
     const messages = await this.prisma.messageGroup.findMany({
       where: { chatId },
       select: messageFindEntity,
     });
+
     return { messages: messages.map(messageReturnData) };
   }
 
-  async findChannelMessages(chatId: string) {
+  async findChannelMessages(chatId: string,userId : string) {
+    this.sessionService.sendToUser(userId, { userId: userId, isOnline:true })
     await checkExistsResurs<UserChat>(this.prisma, ModelsEnumInPrisma.CHANNEL_CHAT, 'id', chatId);
     const messages = await this.prisma.messageChannel.findMany({
       where: { chatId },
@@ -128,8 +173,8 @@ export class MessagesService {
     const message = await this.prisma.messageGroup.findFirst({
       where: { id },
       select: messageFindEntity,
-      orderBy : {
-        createdAt : "desc"
+      orderBy: {
+        createdAt: "desc"
       }
     });
     if (!message) throw new NotFoundException('Message not found!');
@@ -140,8 +185,8 @@ export class MessagesService {
     const message = await this.prisma.messageChannel.findFirst({
       where: { id },
       select: messageFindEntity,
-      orderBy : {
-        createdAt : "asc"
+      orderBy: {
+        createdAt: "asc"
       }
     });
     if (!message) throw new NotFoundException('Message not found!');
@@ -150,28 +195,36 @@ export class MessagesService {
 
   // === DELETE ===
   async deleteUserChatMessageById(messageId: string) {
-    const message = await checkExistsResurs<MessageUserChat>(
+    await checkExistsResurs<MessageUserChat>(
       this.prisma,
       ModelsEnumInPrisma.MESSAGE_USER_CHAT,
       'id',
       messageId
     );
+    let message = await this.prisma.messageUserChat.findFirst({ where: { id: messageId }, select: messageFindEntity })
+    if (!message) return
     await this.prisma.messageUserChat.delete({ where: { id: messageId } });
     await deleteMessageFiles(message);
+    this.sessionService.sendToUser(message.senderId, messageReturnData(message), "del-msg",)
     return { success: true, message: 'User message deleted', deletedId: messageId };
   }
 
   async deleteGroupChatMessageById(messageId: string) {
-    const message = await checkExistsResurs(this.prisma, ModelsEnumInPrisma.MESSAGE_GROUP, 'id', messageId);
-    await this.prisma.messageGroup.delete({ where: { id: messageId } });
+    await checkExistsResurs(this.prisma, ModelsEnumInPrisma.MESSAGE_GROUP, 'id', messageId);
+
+    const message =
+      await this.prisma.messageGroup.delete({ where: { id: messageId }, select: messageFindEntity });
     await deleteMessageFiles(message);
+    this.sessionService.sendToUser(message.senderId, messageReturnData(message), "del-msg")
     return { success: true, message: 'Group message deleted', deletedId: messageId };
   }
 
   async deleteChannelChatMessageById(messageId: string) {
-    const message = await checkExistsResurs(this.prisma, ModelsEnumInPrisma.MESSAGE_CHANNEL, 'id', messageId);
-    await this.prisma.messageChannel.delete({ where: { id: messageId } });
+    await checkExistsResurs(this.prisma, ModelsEnumInPrisma.MESSAGE_CHANNEL, 'id', messageId);
+    const message =
+      await this.prisma.messageChannel.delete({ where: { id: messageId }, select: messageFindEntity });
     await deleteMessageFiles(message);
+    this.sessionService.sendToUser(message.senderId, messageReturnData(message), "del-msg")
     return { success: true, message: 'Channel message deleted', deletedId: messageId };
   }
 }

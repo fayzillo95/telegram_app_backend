@@ -14,9 +14,9 @@ export class AuthController {
   @Post('send-otp')
   async sendOtp(@Body() createAuthDto: CreateOtpDto, @Res() res: Response) {
     const { verificationUrl, ...result } = await this.authService.sendOtp(createAuthDto);
-    if (result.sessionToken) {
-      this.setTokensToCookies(res, null, result.sessionToken, null)
-    }
+    // if (result.sessionToken) {
+    //   this.setTokensToCookies(res, null, result.sessionToken, null)
+    // }
     return res.json({ sessionToken: result.sessionToken, verificationUrl })
   }
 
@@ -28,7 +28,7 @@ export class AuthController {
   ) {
     const result = await this.authService.createUserAndVerifiyCode(otpData);
 
-    this.setTokensToCookies(res, result.accessToken, null, null);
+    // this.setTokensToCookies(res, result.accessToken, null, null);
 
     return res.json(
       {
@@ -49,7 +49,7 @@ export class AuthController {
     const result = await this.authService.verifyExistsUser(user.id, data);
 
     // 🍪 Tokenlarni cookie'ga yozish
-    this.setTokensToCookies(res, result.accessToken, null, null);
+    // this.setTokensToCookies(res, result.accessToken, null, null);
 
     return res.json(
       {

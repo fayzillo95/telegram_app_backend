@@ -36,9 +36,10 @@ CREATE TABLE "public"."group" (
     "type" "public"."ChatType" NOT NULL DEFAULT 'group',
     "title" TEXT,
     "description" TEXT,
+    "logo" TEXT NOT NULL,
     "public_url" TEXT,
     "private_url" TEXT,
-    "subscritions_count" BIGINT NOT NULL DEFAULT 0,
+    "subscritions_count" INTEGER NOT NULL DEFAULT 1,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -49,9 +50,10 @@ CREATE TABLE "public"."group" (
 CREATE TABLE "public"."channel" (
     "id" TEXT NOT NULL,
     "owner_id" TEXT NOT NULL,
-    "subscritions_count" BIGINT NOT NULL DEFAULT 0,
+    "subscritions_count" INTEGER NOT NULL DEFAULT 1,
     "type" "public"."ChatType" NOT NULL DEFAULT 'channel',
     "title" TEXT,
+    "logo" TEXT NOT NULL,
     "description" TEXT,
     "public_url" TEXT,
     "private_url" TEXT,

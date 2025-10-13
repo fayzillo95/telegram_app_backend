@@ -32,8 +32,8 @@ export class MessagesController {
   }
 
   @Get('user/get-all/:chatId')
-  findUserMessages(@Param('chatId') chatId: string) {
-    return this.messagesService.findUserMessages(chatId);
+  findUserMessages(@Param('chatId') chatId: string,@UserData() user  : JwtPayload) {
+    return this.messagesService.findUserMessages(chatId,user.id);
   }
 
   @Get('user/get-one/:id')
@@ -58,8 +58,8 @@ export class MessagesController {
   }
 
   @Get('group/get-all/:chatId')
-  findGroupMessages(@Param('chatId') chatId: string) {
-    return this.messagesService.findGroupMessages(chatId);
+  findGroupMessages(@Param('chatId') chatId: string,@UserData() user :JwtPayload) {
+    return this.messagesService.findGroupMessages(chatId,user.id);
   }
 
   @Get('group/get-one/:id')
@@ -84,8 +84,8 @@ export class MessagesController {
   }
 
   @Get('channel/get-all/:chatId')
-  findChannelMessages(@Param('chatId') chatId: string) {
-    return this.messagesService.findChannelMessages(chatId);
+  findChannelMessages(@Param('chatId') chatId: string,@UserData() user : JwtPayload) {
+    return this.messagesService.findChannelMessages(chatId,user.id);
   }
 
   @Get('channel/get-one/:id')

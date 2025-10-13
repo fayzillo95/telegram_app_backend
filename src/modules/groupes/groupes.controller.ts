@@ -23,7 +23,7 @@ export class GroupesController {
 
   // ✅ CREATE
   @Post('create')
-  @UseInterceptors(FileInterceptor('image', fileStorages(['image'])))
+  @UseInterceptors(FileInterceptor('logo', fileStorages(['image'])))
   create(
     @Body() createGroupeDto: CreateGroupeDto,
     @UserData() user: JwtPayload,

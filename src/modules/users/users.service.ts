@@ -59,7 +59,7 @@ export class UsersService {
     }
   }
 
-  async findAll() {
+  async findAll(userId : string) {
     const users = await this.prisma.user.findMany({
       where  :{
         AND : [
@@ -70,10 +70,14 @@ export class UsersService {
       include: { Profile: true },
     });
 
-    const data = users.map((u) =>
-      userReturnData(u, u.Profile[0], 'User fetched').data,
-    );
-
+    const data = users.map((u) => {
+      if(u.id === userId){
+        u.Profile[0].avatar = "https://membertel.com/wp-content/uploads/2024/02/saved-messages.webp"
+        u.Profile[0].firstName = "Saqlangan"
+        u.Profile[0].lastName = "xabarlar"
+      }
+      return userReturnData(u, u.Profile[0], 'User fetched').data
+    });
     return {
       status: 200,
       success: true,

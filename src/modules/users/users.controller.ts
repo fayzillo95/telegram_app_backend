@@ -12,8 +12,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Get("get-all")
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@UserData() user : JwtPayload) {
+    return this.usersService.findAll(user.id);
   }
 
   @Get('my')
@@ -26,6 +26,6 @@ export class UsersController {
     @Param("userId") userId: string,
     @UserData() user: JwtPayload
   ) {
-
+    return this.usersService.findOne(userId)
   }
 }

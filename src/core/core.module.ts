@@ -7,7 +7,6 @@ import { FileStreamerController } from './services/file.stream.controller';
 import { FileStreamService } from './services/file.stream.service';
 // import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
-import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { SessionsModule } from './sessions/sessions.module';
     JwtSubModule,
     EmailModule,
     AuthModule,
-    SessionsModule,
   ],
   controllers : [FileStreamerController],
   providers : [FileStreamService]

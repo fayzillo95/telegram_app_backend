@@ -1,5 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ChatsService } from './chats.service';
+import { UserData } from 'src/global/decorators/auth.decorators';
+import { JwtPayload } from 'src/common/config/jwt.secrets';
 
 @Controller('chats')
 export class ChatsController {
@@ -7,13 +9,13 @@ export class ChatsController {
 
   // === GET ALL CHATS (BY TYPE) ===
   @Get('get-all/:type')
-  async findAllByType(@Param('type') type: 'user' | 'group' | 'channel') {
-    return this.chatsService.findAllByType(type);
+  async findAllByType(@Param('type') type: 'user' | 'group' | 'channel',@UserData() user : JwtPayload) {
+    return this.chatsService.findAllByType(type,user.id);
   }
 
   @Get("get-all")
-  findAll(){
-    return this.chatsService.findAllChats()
+  findAll(@UserData() user : JwtPayload){
+    return this.chatsService.findAllChats(user.id)
   }
   
   // === GET ONE CHAT BY TYPE ===
@@ -21,7 +23,8 @@ export class ChatsController {
   async findOne(
     @Param('type') type: 'user' | 'group' | 'channel',
     @Param('id') id: string,
+    @UserData() user :JwtPayload
   ) {
-    return this.chatsService.findOneByType(type, id);
+    return this.chatsService.findOneByType(type, id,user.id);
   }
 }

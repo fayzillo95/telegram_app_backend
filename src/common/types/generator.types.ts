@@ -27,7 +27,7 @@ export function urlGenerator(config: ConfigService, param: string): string {
   // Xato tuzatildi: http
   const baseUrl = config.get<string>("APP_BASE_URL") || `http://${host}:${port}`;
 
-  return `${baseUrl}/api/${serverPath}/${param}`;
+  return `api/${serverPath}/${param}`;
 }
 
 export function messageGenerator(
@@ -46,16 +46,16 @@ export function getPathInFileType(fileName: string): string {
   let filePath: string;
 
   if (imageExtensions.includes(extract)) {
-    filePath = join(process.cwd(), "..", "core", "uploads", "images");
+    filePath = join(process.cwd(), "uploads", "images");
   } else if (videoExtensions.includes(extract)) {
-    filePath = join(process.cwd(), "..", "core", "uploads", "videos");
+    filePath = join(process.cwd(), "uploads", "videos");
   } else if (documentExtensions.includes(extract)) {
-    filePath = join(process.cwd(), "..", "core", "uploads", "docs");
+    filePath = join(process.cwd(), "uploads", "docs");
   } else if (archiveExtensions.includes(extract)) {
     // Xato tuzatildi: archive
-    filePath = join(process.cwd(), "..", "core", "uploads", "archive");
+    filePath = join(process.cwd(), "uploads", "archive");
   } else {
-    filePath = join(process.cwd(), "..", "core", "uploads", "unknown");
+    filePath = join(process.cwd(), "uploads", "unknown");
   }
 
   if (!existsSync(filePath)) {

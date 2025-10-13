@@ -2,51 +2,72 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { channelChatReturnData } from './entities/chat.entity';
 import { profileServiceReturnData } from '../profile/entities/profile.entity';
+import { SessionsService } from 'src/soket/soket.service';
+import { urlGenerator } from 'src/common/types/generator.types';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly sessionService: SessionsService,
+    private readonly config : ConfigService
+  ) { }
 
   // === FIND ALL BY TYPE ===
-  async findAllByType(type: 'user' | 'group' | 'channel') {
+  async findAllByType(type: 'user' | 'group' | 'channel', user1Id: string) {
+    this.sessionService.sendToUser(user1Id, { userId: user1Id, isOnline: this.sessionService.chekIsOnlie(user1Id) }, "online")
+
     switch (type) {
       // 👤 PRIVATE CHATS
       case 'user': {
+        console.log(user1Id)
+        if (!user1Id) return []
         const chats = await this.prisma.userChat.findMany({
+          where: {
+            OR: [
+              { user1Id: user1Id },
+              { user2Id: user1Id }
+            ]
+          },
           include: {
             user1: { include: { Profile: true } },
             user2: { include: { Profile: true } },
           },
           orderBy: { updatedAt: 'desc' },
         });
+        if (chats[0]) {
 
-        return chats.map((chat) => {
-          const { id, createdAt, updatedAt, type, user1, user2 } = chat;
+          return chats.map((chat) => {
+            const { id, createdAt, updatedAt, type, user1, user2 } = chat;
 
-          // Qarama-qarshi tomondagi user — biz ko‘rsatmoqchi bo‘lgan "owner"
-          const owner = user2; // yoki user1 — login bo‘lgan userga qarab almashtirasiz
+            // Qarama-qarshi tomondagi user — biz ko‘rsatmoqchi bo‘lgan "owner"
+            const owner = user1Id === chat.user1Id ? chat.user2 : chat.user1; // yoki user1 — login bo‘lgan userga qarab almashtirasiz
+            this.sessionService.sendToUser(user1Id, { userId: user1Id, isOnline: this.sessionService.chekIsOnlie(owner.id) }, "online")
 
-          const profile = owner.Profile?.[0];
-          const title = `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim();
-          const logo = profile?.avatar ?? null;
-          const description = profile?.bio ?? null;
-
-          return channelChatReturnData({
-            id,
-            title,
-            logo,
-            description,
-            publicUrl: profile?.publicUrl ?? null,
-            privateUrl: profile?.privateUrl ?? null,
-            subscriptionsCount: 1,
-            createdAt,
-            updatedAt,
-            type,
-            owner,
-          } as any);
-        });
+            const profile = owner.Profile?.[0];
+            const targetUser = chat.user1Id !== user1Id ? chat.user1 : chat.user2
+            const title = chat.user1Id !== chat.user2Id ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() : "Saqlangan";
+            const logo = chat.user1Id !== chat.user2Id ? profile?.avatar ?? null : urlGenerator(this.config,"save_messages.png");
+            const description = profile?.bio ?? null;
+            return channelChatReturnData({
+              id,
+              title,
+              logo,
+              description,
+              publicUrl: profile?.publicUrl ?? null,
+              privateUrl: profile?.privateUrl ?? null,
+              subscriptionsCount: 1,
+              createdAt,
+              updatedAt,
+              type,
+              owner,
+            } as any, "", owner.lastActivaty);
+          });
+        } else {
+          return []
+        }
       }
-
 
       // 👥 GROUP CHATS
       case 'group': {
@@ -86,9 +107,14 @@ export class ChatsService {
         throw new NotFoundException(`Unknown chat type: ${type}`);
     }
   }
-  async findAllChats() {
+  async findAllChats(user1Id: string) {
     // 1️⃣ User chatlar
-    const userChats = await this.prisma.userChat.findMany({
+    this.sessionService.sendToUser(user1Id, { userId: user1Id, isOnline: this.sessionService.chekIsOnlie(user1Id) }, "online")
+
+    let userChats = await this.prisma.userChat.findMany({
+      where: {
+        OR: [{ user1Id }, { user2Id: user1Id }],
+      },
       include: {
         user1: { include: { Profile: true } },
         user2: { include: { Profile: true } },
@@ -96,28 +122,46 @@ export class ChatsService {
       orderBy: { updatedAt: 'desc' },
     });
 
+
+    // 2️⃣ Har bir chatni formatlash
     const userChatData = userChats.map((chat) => {
       const { id, createdAt, updatedAt, type, user1, user2 } = chat;
-      const profile = user2.Profile?.[0];
-      const title = `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim();
-      const logo = profile?.avatar ?? null;
+
+      const isSavedChat = chat.user1Id === chat.user2Id && chat.user1Id === user1Id;
+      const owner = user1Id === chat.user1Id ? chat.user2 : chat.user1;
+
+      const profile = owner.Profile?.[0];
+
+      const title = isSavedChat
+        ? "Saqlangan xabarlar"
+        : `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim();
+
+      const logo = isSavedChat
+        ? urlGenerator(this.config,"save_messages.png")
+        : profile?.avatar ?? null;
+
+      const description = isSavedChat
+        ? "Shaxsiy saqlangan fayllar"
+        : profile?.bio ?? null;
+      this.sessionService.sendToUser(user1Id, { userId: user1Id, isOnline: this.sessionService.chekIsOnlie(owner.id) }, "online")
 
       return channelChatReturnData({
         id,
         title,
         logo,
-        description: profile?.bio ?? null,
+        description,
         publicUrl: profile?.publicUrl ?? null,
         privateUrl: profile?.privateUrl ?? null,
         subscriptionsCount: 1,
         createdAt,
         updatedAt,
         type,
-        owner: user2,
-      } as any);
+        owner,
+
+      } as any, "", owner.lastActivaty);
     });
 
-    // 2️⃣ Group chatlar
+    // 3️⃣ Group chatlar
     const groupChats = await this.prisma.groupChat.findMany({
       include: {
         owner: { include: { Profile: true } },
@@ -134,7 +178,7 @@ export class ChatsService {
       } as any),
     );
 
-    // 3️⃣ Channel chatlar
+    // 4️⃣ Channel chatlar
     const channelChats = await this.prisma.channelChat.findMany({
       include: {
         owner: { include: { Profile: true } },
@@ -151,17 +195,20 @@ export class ChatsService {
       } as any),
     );
 
-    // 4️⃣ Hammasini birlashtirish
+    // 5️⃣ Barchasini birlashtiramiz va tartiblaymiz
     const allChats = [...userChatData, ...groupChatData, ...channelChatData];
 
-    // 5️⃣ Yangilanish sanasiga qarab tartiblash
     return allChats.sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
   }
 
+
+
   // === FIND ONE BY TYPE ===
-  async findOneByType(type: 'user' | 'group' | 'channel', id: string) {
+  async findOneByType(type: 'user' | 'group' | 'channel', id: string, user1Id: string) {
+    this.sessionService.sendToUser(user1Id, { userId: user1Id, isOnline: this.sessionService.chekIsOnlie(user1Id) }, "online")
+
     switch (type) {
       case 'user': {
         const chat = await this.prisma.userChat.findUnique({
@@ -204,7 +251,7 @@ export class ChatsService {
           updatedAt,
           type,
           owner,
-        } as any);
+        } as any, "", owner.lastActivaty);
       }
 
       case 'group': {

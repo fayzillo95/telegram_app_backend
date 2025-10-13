@@ -7,7 +7,7 @@ import { CreateGroupeDto } from './dto/create-groupe.dto';
 import { UpdateGroupeDto } from './dto/update-groupe.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { ImageGenerator } from 'src/common/types/generator.types';
+import { ImageGenerator, urlGenerator } from 'src/common/types/generator.types';
 import { checkExistsResurs } from 'src/common/types/check.functions.types';
 import { GroupChat, User } from '@prisma/client';
 import { ModelsEnumInPrisma } from 'src/common/types/global.types';
@@ -52,7 +52,7 @@ export class GroupesService {
 
     // Default avatar yoki upload
     let img = image
-      ? image.filename
+      ? urlGenerator(this.config,image.filename)
       : this.imageGenerator.generateAvatar(data.title.slice(0, 2), this.config);
 
     const newGroup = await this.prisma.groupChat.create({
